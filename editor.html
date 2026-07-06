@@ -5,9 +5,6 @@
   <meta name="viewport" content="width=device-width,initial-scale=1"/>
   <title>청첩장 편집기</title>
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&display=swap" rel="stylesheet"/>
-  <!-- Firebase SDK -->
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
   <style>
     *{margin:0;padding:0;box-sizing:border-box}
     :root{
@@ -467,33 +464,31 @@
       <!-- 연결 상태 -->
       <div class="status-row status-off" id="cloud-status">
         <div class="status-dot dot-off" id="cloud-dot"></div>
-        <span id="cloud-status-txt">연결 안 됨 · 아래 안내를 따라 설정해주세요</span>
+        <span id="cloud-status-txt">연결 안 됨</span>
       </div>
 
       <!-- 설정 가이드 -->
       <div id="cloud-guide">
-        <p style="font-size:13px;font-weight:600;margin-bottom:10px">Firebase 무료 프로젝트 만들기 (최초 1회)</p>
+        <p style="font-size:13px;font-weight:600;margin-bottom:10px">Google Sheets 연결 방법 (최초 1회)</p>
         <ol class="steps">
-          <li><a href="https://console.firebase.google.com" target="_blank">console.firebase.google.com</a> 접속 → Google 계정으로 로그인</li>
-          <li><strong>프로젝트 추가</strong> 클릭 → 이름 입력 (예: my-wedding) → Google Analytics 비활성화 → <strong>프로젝트 만들기</strong></li>
-          <li>프로젝트 홈에서 <strong>&lt;/&gt; 웹</strong> 버튼 클릭 → 앱 이름 입력 → <strong>앱 등록</strong></li>
-          <li>아래 <code style="background:#F3F4F6;padding:1px 5px;border-radius:3px">firebaseConfig = { ... }</code> 코드가 나오면 <strong>{ } 중괄호 안쪽 전체</strong>를 복사</li>
-          <li>왼쪽 메뉴 → <strong>Firestore Database</strong> → <strong>데이터베이스 만들기</strong> → <strong>테스트 모드</strong> → 위치: <strong>asia-northeast3</strong> → 완료</li>
+          <li><a href="https://sheets.new" target="_blank">sheets.new</a> 접속 → 새 시트 생성</li>
+          <li>상단 메뉴 <strong>확장 프로그램 → Apps Script</strong> 클릭</li>
+          <li>기존 코드 전부 지우고 아래 코드 붙여넣기:<br>
+            <code style="display:block;background:#F3F4F6;padding:8px;border-radius:4px;margin-top:6px;font-size:11px;line-height:1.6">
+function doGet(){var v=SpreadsheetApp.getActiveSheet().getRange('A1').getValue();return ContentService.createTextOutput(v||'{}').setMimeType(ContentService.MimeType.JSON);}
+function doPost(e){SpreadsheetApp.getActiveSheet().getRange('A1').setValue(e.postData.contents);return ContentService.createTextOutput('ok');}
+            </code>
+          </li>
+          <li><strong>배포 → 새 배포</strong> → 유형: <strong>웹 앱</strong> → 액세스: <strong>모든 사용자</strong> → <strong>배포</strong></li>
+          <li>생성된 <strong>웹 앱 URL</strong>을 아래에 붙여넣기</li>
         </ol>
       </div>
 
-      <!-- 설정 입력 -->
+      <!-- URL 입력 -->
       <div class="field" id="cloud-input-wrap">
-        <label>Firebase 설정 붙여넣기</label>
-        <textarea id="cloud-cfg-input" rows="7" placeholder='{
-  "apiKey": "AIza...",
-  "authDomain": "my-wedding.firebaseapp.com",
-  "projectId": "my-wedding",
-  "storageBucket": "my-wedding.appspot.com",
-  "messagingSenderId": "123456789",
-  "appId": "1:123456789:web:abc123"
-}'></textarea>
-        <div class="field-hint">{ } 안쪽 내용만 붙여넣으세요. apiKey, projectId 등이 포함되어야 합니다.</div>
+        <label>웹 앱 URL 붙여넣기</label>
+        <input id="cloud-url-input" type="url" placeholder="https://script.google.com/macros/s/.../exec"/>
+        <div class="field-hint">배포 후 생성된 URL을 그대로 붙여넣으세요.</div>
       </div>
       <div style="display:flex;gap:8px;margin-top:4px">
         <button class="btn btn-primary" onclick="connectCloud()" style="flex:1">연결하기</button>
@@ -519,128 +514,110 @@ const $=id=>document.getElementById(id);
 let galleryImages=[];
 
 /* ══════════════════════════════
-   Firebase 클라우드 동기화
+   Google Sheets 클라우드 동기화
 ══════════════════════════════ */
-let _db=null;
+let _gsUrl=null;
 
-function getFbCfg(){try{return JSON.parse(localStorage.getItem('wc_fb')||'null');}catch(e){return null;}}
-
-async function tryInitFirebase(cfg){
-  try{
-    if(!cfg)return false;
-    if(firebase.apps.length)firebase.apps[0].delete();
-    firebase.initializeApp(cfg);
-    _db=firebase.firestore();
-    await _db.collection('wedding').doc('config').get(); // 연결 테스트
-    return true;
-  }catch(e){
-    _db=null;
-    console.warn('Firebase init failed:',e.message);
-    return false;
-  }
-}
+function getGsUrl(){return localStorage.getItem('wc_gs')||null;}
 
 async function cloudLoad(){
-  if(!_db)return null;
-  try{const s=await _db.collection('wedding').doc('config').get();return s.exists?s.data():null;}
-  catch(e){return null;}
+  if(!_gsUrl)return null;
+  try{
+    const res=await fetch(_gsUrl);
+    const data=await res.json();
+    return(Object.keys(data).length>0)?data:null;
+  }catch(e){return null;}
 }
 
 async function cloudSave(data){
-  if(!_db)return;
-  await _db.collection('wedding').doc('config').set(data,{merge:true});
+  if(!_gsUrl)return;
+  try{
+    await fetch(_gsUrl,{method:'POST',body:JSON.stringify(data)});
+  }catch(e){}
 }
 
 function updateCloudBtn(){
   const btn=$('cloud-btn');
-  if(_db){btn.textContent='☁️ 연결됨';btn.className='btn btn-cloud-on';}
+  if(_gsUrl){btn.textContent='☁️ 연결됨';btn.className='btn btn-cloud-on';}
   else{btn.textContent='☁️ 클라우드';btn.className='btn';}
 }
 
 /* 모달 열기/닫기 */
 window.openCloudModal=function(){
   $('cloud-modal').classList.remove('hide');
-  const cfg=getFbCfg();
-  if(cfg&&_db){
+  if(_gsUrl){
     showCloudConnected();
-  } else if(cfg){
-    $('cloud-cfg-input').value=JSON.stringify(cfg,null,2);
+  } else {
+    const saved=getGsUrl();
+    if(saved)$('cloud-url-input').value=saved;
   }
 };
 window.closeCloudModal=function(){$('cloud-modal').classList.add('hide');};
 
 function showCloudConnected(){
-  const s=$('cloud-status');
-  s.className='status-row status-ok';
+  $('cloud-status').className='status-row status-ok';
   $('cloud-dot').className='status-dot dot-ok';
-  const cfg=getFbCfg();
-  $('cloud-status-txt').textContent=`연결됨 · 프로젝트: ${cfg?.projectId||''}`;
+  $('cloud-status-txt').textContent='연결됨 · Google Sheets';
   $('cloud-guide').style.display='none';
   $('cloud-input-wrap').style.display='none';
   $('disconnect-btn').style.display='block';
   $('device-link-wrap').style.display='block';
-  const link=`${location.origin}${location.pathname}#fb=${btoa(JSON.stringify(cfg))}`;
+  const link=`${location.origin}${location.pathname}#gs=${btoa(_gsUrl)}`;
   $('device-link').value=link;
 }
 
 window.connectCloud=async function(){
-  const raw=$('cloud-cfg-input').value.trim();
-  if(!raw){alert('Firebase 설정을 붙여넣어주세요.');return;}
+  const url=$('cloud-url-input').value.trim();
+  if(!url){alert('웹 앱 URL을 붙여넣어주세요.');return;}
+  if(!url.includes('script.google.com')){alert('Google Apps Script URL이 아닌 것 같습니다.\n다시 확인해주세요.');return;}
   try{
-    let cfg;
-    // { } 안쪽만 붙여넣은 경우 처리
-    const txt=raw.startsWith('{')?raw:`{${raw}}`;
-    cfg=JSON.parse(txt);
-    if(!cfg.apiKey||!cfg.projectId)throw new Error('apiKey 또는 projectId가 없습니다.');
-    const ok=await tryInitFirebase(cfg);
-    if(!ok)throw new Error('Firestore 연결에 실패했습니다.\nFirestore가 활성화되어 있는지 확인해주세요.');
-    localStorage.setItem('wc_fb',JSON.stringify(cfg));
+    const res=await fetch(url);
+    await res.json();
+    _gsUrl=url;
+    localStorage.setItem('wc_gs',url);
     updateCloudBtn();
     showCloudConnected();
-    // 클라우드에 기존 데이터가 있으면 로드
     const cloud=await cloudLoad();
     if(cloud){
       localStorage.setItem('wc_data',JSON.stringify(cloud));
       populate();
-      toast('✅ 클라우드 연결 완료! 저장된 데이터를 불러왔습니다.');
+      toast('✅ 연결 완료! 저장된 데이터를 불러왔습니다.');
     } else {
-      toast('✅ 클라우드 연결 완료!');
+      toast('✅ Google Sheets 연결 완료!');
     }
   }catch(e){
-    alert('연결 실패: '+e.message+'\n\nFirebase 설정을 다시 확인해주세요.');
+    alert('연결 실패: URL을 다시 확인해주세요.\n(배포 시 액세스 권한이 "모든 사용자"인지 확인)');
   }
 };
 
 window.disconnectCloud=function(){
   if(!confirm('클라우드 연결을 해제할까요?\n로컬 데이터는 유지됩니다.'))return;
-  localStorage.removeItem('wc_fb');
-  _db=null;
-  if(firebase.apps.length)firebase.apps[0].delete();
+  localStorage.removeItem('wc_gs');
+  _gsUrl=null;
   updateCloudBtn();
   closeCloudModal();
   toast('클라우드 연결이 해제되었습니다.');
 };
 
 window.copyDeviceLink=function(){
-  const v=$('device-link').value;
-  navigator.clipboard.writeText(v).then(()=>toast('✅ 링크가 복사되었습니다!'));
+  navigator.clipboard.writeText($('device-link').value).then(()=>toast('✅ 링크가 복사되었습니다!'));
 };
 
-/* URL 해시에서 Firebase 설정 자동 적용 (#fb=...) */
+/* URL 해시에서 Google Sheets URL 자동 적용 (#gs=...) */
 async function checkHashSetup(){
   const hash=location.hash;
-  if(!hash.startsWith('#fb='))return;
+  if(!hash.startsWith('#gs='))return;
   try{
-    const cfg=JSON.parse(atob(hash.slice(4)));
+    const url=atob(hash.slice(4));
     history.replaceState(null,'',location.pathname);
-    const ok=await tryInitFirebase(cfg);
-    if(ok){
-      localStorage.setItem('wc_fb',JSON.stringify(cfg));
-      updateCloudBtn();
-      const cloud=await cloudLoad();
-      if(cloud)localStorage.setItem('wc_data',JSON.stringify(cloud));
-      toast('✅ 새 기기에 클라우드 연결 완료!');
-    }
+    const res=await fetch(url);
+    await res.json();
+    _gsUrl=url;
+    localStorage.setItem('wc_gs',url);
+    updateCloudBtn();
+    const cloud=await cloudLoad();
+    if(cloud)localStorage.setItem('wc_data',JSON.stringify(cloud));
+    toast('✅ 새 기기에 클라우드 연결 완료!');
   }catch(e){}
 }
 
@@ -845,7 +822,7 @@ window.saveAll=async function(){
     else alert('저장 중 오류가 발생했습니다: '+e.message);
     return;
   }
-  if(_db){
+  if(_gsUrl){
     try{
       await cloudSave(data);
       toast('✅ 저장 완료! (로컬 + 클라우드)');
@@ -883,14 +860,16 @@ window.toast=function(msg){
 /* ── 앱 시작 ── */
 (async()=>{
   await checkHashSetup();
-  const cfg=getFbCfg();
-  if(cfg){
-    const ok=await tryInitFirebase(cfg);
-    if(ok){
+  const saved=getGsUrl();
+  if(saved){
+    try{
+      const res=await fetch(saved);
+      await res.json();
+      _gsUrl=saved;
       updateCloudBtn();
       const cloud=await cloudLoad();
       if(cloud)localStorage.setItem('wc_data',JSON.stringify(cloud));
-    }
+    }catch(e){}
   }
   populate();
 })();
