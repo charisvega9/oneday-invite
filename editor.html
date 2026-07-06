@@ -858,19 +858,24 @@ window.toast=function(msg){
 };
 
 /* ── 앱 시작 ── */
+const DEFAULT_GS_URL='https://script.google.com/macros/s/AKfycbyDklnloqFKVfcKsABfEZBOwmEjBtjovprCF36d3XEyqK_PSkiMHp-ZAbhF_G7sf7DE/exec';
 (async()=>{
   await checkHashSetup();
-  const saved=getGsUrl();
-  if(saved){
-    try{
-      const res=await fetch(saved);
-      await res.json();
-      _gsUrl=saved;
+  const url=getGsUrl()||DEFAULT_GS_URL;
+  try{
+    const res=await fetch(url);
+    const json=await res.json();
+    if(json){
+      _gsUrl=url;
+      if(!getGsUrl())localStorage.setItem('wc_gs',url);
       updateCloudBtn();
       const cloud=await cloudLoad();
-      if(cloud)localStorage.setItem('wc_data',JSON.stringify(cloud));
-    }catch(e){}
-  }
+      if(cloud){
+        localStorage.setItem('wc_data',JSON.stringify(cloud));
+        toast('☁️ 클라우드에서 데이터를 불러왔습니다.');
+      }
+    }
+  }catch(e){}
   populate();
 })();
 </script>
