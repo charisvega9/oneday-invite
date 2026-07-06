@@ -459,9 +459,11 @@
 
 <script src="config.js"></script>
 <script>
-/* ── 편집기(editor.html) localStorage 오버라이드 적용 ── */
-;(()=>{
+/* ── 데이터 초기화: localStorage → Google Sheets → 렌더 ── */
+;(async()=>{
   function deepMerge(t,s){for(const k in s){if(s[k]&&typeof s[k]==='object'&&!Array.isArray(s[k])){t[k]=t[k]||{};deepMerge(t[k],s[k]);}else t[k]=s[k];}}
+
+  // 1. localStorage 오버라이드
   try{
     const ov=JSON.parse(localStorage.getItem('wc_data')||'{}');
     deepMerge(WEDDING_CONFIG,ov);
@@ -471,7 +473,20 @@
     const bp=localStorage.getItem('wc_img_bride');if(bp)WEDDING_CONFIG.bride.photo=bp;
     const gl=JSON.parse(localStorage.getItem('wc_img_gallery')||'[]');if(gl.length)WEDDING_CONFIG.photos=gl;
   }catch(e){}
-})();
+
+  // 2. Google Sheets 클라우드에서 최신 데이터 로드
+  const gsUrl=localStorage.getItem('wc_gs')||WEDDING_CONFIG.cloudUrl||'https://script.google.com/macros/s/AKfycbyDklnloqFKVfcKsABfEZBOwmEjBtjovprCF36d3XEyqK_PSkiMHp-ZAbhF_G7sf7DE/exec';
+  if(gsUrl){
+    try{
+      const res=await fetch(gsUrl);
+      const cloud=await res.json();
+      if(cloud&&Object.keys(cloud).length){
+        deepMerge(WEDDING_CONFIG,cloud);
+        localStorage.setItem('wc_data',JSON.stringify(cloud));
+        if(!localStorage.getItem('wc_gs'))localStorage.setItem('wc_gs',gsUrl);
+      }
+    }catch(e){}
+  }
 
 /* ── 테마 ── */
 ;(()=>{
@@ -679,6 +694,7 @@ window.toast=function(msg){const el=$('toast');el.textContent=msg;el.classList.a
 /* ── Reveal 스크롤 ── */
 const obs=new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting)e.target.classList.add('in');}),{threshold:.08});
 document.querySelectorAll('.rv,.rv-l,.rv-r').forEach(el=>obs.observe(el));
+})();
 </script>
 </body>
 </html>
