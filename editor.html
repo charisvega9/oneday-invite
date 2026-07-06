@@ -1,0 +1,899 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>청첩장 편집기</title>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&display=swap" rel="stylesheet"/>
+  <!-- Firebase SDK -->
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+  <style>
+    *{margin:0;padding:0;box-sizing:border-box}
+    :root{
+      --blue:#2563EB;--blue-lt:#EFF6FF;--blue-bd:#BFDBFE;
+      --border:#E5E7EB;--text:#111827;--text2:#6B7280;
+      --bg:#F9FAFB;--white:#FFFFFF;--red:#EF4444;--green:#10B981;
+      --sans:'Noto Sans KR',sans-serif;
+    }
+    body{font-family:var(--sans);background:var(--bg);color:var(--text);min-height:100vh}
+
+    /* ── 상단 바 ── */
+    .topbar{
+      position:sticky;top:0;z-index:100;
+      background:var(--white);border-bottom:1px solid var(--border);
+      padding:12px 20px;display:flex;align-items:center;justify-content:space-between;
+      gap:10px;
+    }
+    .topbar-title{font-size:15px;font-weight:700;white-space:nowrap}
+    .topbar-actions{display:flex;gap:8px;flex-shrink:0}
+
+    /* ── 버튼 ── */
+    .btn{
+      padding:8px 16px;border-radius:6px;font-size:13px;
+      font-family:var(--sans);cursor:pointer;border:1px solid var(--border);
+      background:var(--white);color:var(--text);transition:all .15s;
+      white-space:nowrap;
+    }
+    .btn:hover{background:var(--bg)}
+    .btn-primary{background:var(--blue);color:#fff;border-color:var(--blue)}
+    .btn-primary:hover{background:#1D4ED8}
+    .btn-danger{color:var(--red);border-color:#FCA5A5}
+    .btn-danger:hover{background:#FEF2F2}
+    .btn-link{
+      background:var(--blue-lt);color:var(--blue);border-color:var(--blue-bd);
+      text-decoration:none;display:inline-flex;align-items:center;
+    }
+    .btn-link:hover{background:#DBEAFE}
+
+    /* ── 탭 ── */
+    .tabs{
+      background:var(--white);border-bottom:1px solid var(--border);
+      display:flex;overflow-x:auto;scrollbar-width:none;padding:0 12px;
+    }
+    .tabs::-webkit-scrollbar{display:none}
+    .tab{
+      padding:12px 16px;font-size:13px;font-family:var(--sans);
+      border:none;background:none;cursor:pointer;color:var(--text2);
+      border-bottom:2px solid transparent;white-space:nowrap;transition:all .15s;
+    }
+    .tab.on{color:var(--blue);border-bottom-color:var(--blue);font-weight:500}
+
+    /* ── 컨텐츠 ── */
+    .pane{display:none;padding:24px 20px;max-width:680px;margin:0 auto}
+    .pane.on{display:block}
+
+    /* ── 폼 ── */
+    .sec{margin-bottom:32px}
+    .sec-hd{
+      font-size:11px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;
+      color:var(--text2);margin-bottom:16px;padding-bottom:8px;
+      border-bottom:1px solid var(--border);
+    }
+    .field{margin-bottom:16px}
+    .field label{display:block;font-size:12px;font-weight:500;color:var(--text2);margin-bottom:6px}
+    .field input,.field textarea,.field select{
+      width:100%;padding:10px 12px;border:1px solid var(--border);border-radius:6px;
+      font-size:14px;font-family:var(--sans);color:var(--text);background:var(--white);
+      outline:none;transition:border .15s;
+    }
+    .field input:focus,.field textarea:focus{
+      border-color:var(--blue);box-shadow:0 0 0 3px rgba(37,99,235,.08);
+    }
+    .field textarea{resize:vertical;line-height:1.9;min-height:120px}
+    .field-hint{font-size:11px;color:var(--text2);margin-top:5px;line-height:1.6}
+    .row2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+    .row3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}
+
+    /* ── 사진 영역 ── */
+    .photo-zone{
+      border:2px dashed var(--border);border-radius:8px;
+      padding:28px;text-align:center;cursor:pointer;
+      transition:all .15s;background:var(--white);position:relative;overflow:hidden;
+    }
+    .photo-zone:hover{border-color:var(--blue);background:var(--blue-lt)}
+    .photo-zone.has{border-style:solid;padding:0}
+    .photo-zone input[type=file]{
+      position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%;
+    }
+    .photo-zone img{width:100%;display:block;max-height:300px;object-fit:cover;border-radius:6px}
+    .pz-icon{font-size:28px;margin-bottom:8px}
+    .pz-txt{font-size:12px;color:var(--text2)}
+    .pz-del{
+      position:absolute;top:8px;right:8px;z-index:10;
+      background:rgba(0,0,0,.6);color:#fff;border:none;
+      border-radius:4px;padding:4px 10px;font-size:11px;cursor:pointer;
+    }
+
+    /* ── 갤러리 ── */
+    .gl-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+    .gl-item{position:relative;aspect-ratio:3/4;border-radius:6px;overflow:hidden;background:var(--border)}
+    .gl-item img{width:100%;height:100%;object-fit:cover}
+    .gl-del{
+      position:absolute;top:4px;right:4px;
+      background:rgba(0,0,0,.6);color:#fff;border:none;
+      border-radius:4px;padding:3px 6px;font-size:10px;cursor:pointer;
+    }
+    .gl-add{
+      aspect-ratio:3/4;border-radius:6px;border:2px dashed var(--border);
+      display:flex;flex-direction:column;align-items:center;justify-content:center;
+      gap:6px;cursor:pointer;font-size:11px;color:var(--text2);
+      position:relative;background:var(--white);transition:all .15s;
+    }
+    .gl-add:hover{border-color:var(--blue);color:var(--blue)}
+    .gl-add input{position:absolute;inset:0;opacity:0;cursor:pointer}
+
+    /* ── 계좌 카드 ── */
+    .acc-card{
+      background:var(--white);border:1px solid var(--border);
+      border-radius:8px;padding:16px;margin-bottom:12px;
+    }
+    .acc-card-hd{font-size:11px;font-weight:700;text-transform:uppercase;color:var(--text2);margin-bottom:12px}
+
+    /* ── 토글 ── */
+    .toggle-row{display:flex;align-items:center;justify-content:space-between;padding:12px 0}
+    .toggle-lbl{font-size:14px}
+    .toggle{position:relative;width:44px;height:24px;flex-shrink:0}
+    .toggle input{opacity:0;width:0;height:0}
+    .toggle-sl{
+      position:absolute;inset:0;background:var(--border);border-radius:12px;cursor:pointer;transition:.2s;
+    }
+    .toggle-sl::before{
+      content:'';position:absolute;width:18px;height:18px;left:3px;top:3px;
+      background:#fff;border-radius:50%;transition:.2s;
+    }
+    .toggle input:checked+.toggle-sl{background:var(--blue)}
+    .toggle input:checked+.toggle-sl::before{transform:translateX(20px)}
+
+    /* ── 저장 공간 ── */
+    .storage{margin-top:24px;padding:16px;background:var(--white);border:1px solid var(--border);border-radius:8px}
+    .storage-hd{display:flex;justify-content:space-between;font-size:12px;color:var(--text2);margin-bottom:8px}
+    .storage-track{height:6px;background:var(--border);border-radius:3px;overflow:hidden}
+    .storage-fill{height:100%;border-radius:3px;background:var(--blue);transition:width .3s}
+    .storage-fill.warn{background:#F59E0B}
+    .storage-fill.danger{background:var(--red)}
+
+    /* ── 클라우드 버튼 상태 ── */
+    .btn-cloud-on{background:#ECFDF5!important;color:#059669!important;border-color:#A7F3D0!important}
+
+    /* ── 모달 ── */
+    .modal-bg{
+      position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:1000;
+      display:flex;align-items:center;justify-content:center;padding:16px;
+    }
+    .modal-bg.hide{display:none}
+    .modal{
+      background:var(--white);border-radius:12px;
+      width:100%;max-width:520px;max-height:90vh;overflow-y:auto;
+      box-shadow:0 20px 60px rgba(0,0,0,.25);
+    }
+    .modal-hd{
+      padding:20px 24px 16px;border-bottom:1px solid var(--border);
+      display:flex;align-items:center;justify-content:space-between;
+    }
+    .modal-hd h2{font-size:16px;font-weight:700}
+    .modal-close{background:none;border:none;font-size:20px;cursor:pointer;color:var(--text2);line-height:1}
+    .modal-body{padding:20px 24px 24px}
+    .steps{counter-reset:step;list-style:none;display:flex;flex-direction:column;gap:10px;margin-bottom:20px}
+    .steps li{
+      counter-increment:step;display:flex;gap:10px;align-items:flex-start;
+      font-size:13px;line-height:1.7;
+    }
+    .steps li::before{
+      content:counter(step);flex-shrink:0;width:22px;height:22px;border-radius:50%;
+      background:var(--blue);color:#fff;font-size:11px;font-weight:700;
+      display:flex;align-items:center;justify-content:center;margin-top:1px;
+    }
+    .steps a{color:var(--blue)}
+    .status-row{
+      display:flex;align-items:center;gap:8px;
+      padding:12px 16px;border-radius:8px;font-size:13px;margin-bottom:20px;
+    }
+    .status-ok{background:#ECFDF5;color:#065F46;border:1px solid #A7F3D0}
+    .status-off{background:var(--bg);color:var(--text2);border:1px solid var(--border)}
+    .status-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+    .dot-ok{background:#10B981}
+    .dot-off{background:#D1D5DB}
+    .link-box{
+      display:flex;gap:8px;align-items:center;
+      background:var(--bg);border:1px solid var(--border);border-radius:6px;
+      padding:8px 12px;margin-top:8px;
+    }
+    .link-box input{
+      flex:1;border:none;background:none;font-size:11px;color:var(--text2);
+      font-family:monospace;outline:none;min-width:0;
+    }
+    .link-copy{
+      flex-shrink:0;padding:4px 10px;border-radius:4px;font-size:11px;
+      background:var(--blue-lt);color:var(--blue);border:none;cursor:pointer;
+      font-family:var(--sans);white-space:nowrap;
+    }
+
+    /* ── 토스트 ── */
+    #toast{
+      position:fixed;bottom:24px;left:50%;
+      transform:translateX(-50%) translateY(20px);
+      background:var(--text);color:#fff;padding:12px 24px;
+      border-radius:8px;font-size:13px;opacity:0;transition:all .3s;
+      pointer-events:none;z-index:9999;white-space:nowrap;
+    }
+    #toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+    /* ── 안내 배너 ── */
+    .banner{
+      background:var(--blue-lt);border:1px solid var(--blue-bd);
+      border-radius:8px;padding:14px 16px;font-size:13px;color:var(--blue);
+      line-height:1.8;margin-bottom:24px;
+    }
+  </style>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="topbar-title">✏️ 청첩장 편집기</div>
+  <div class="topbar-actions">
+    <button class="btn btn-danger" onclick="resetAll()">초기화</button>
+    <button class="btn" id="cloud-btn" onclick="openCloudModal()">☁️ 클라우드</button>
+    <a class="btn btn-link" href="index.html" target="_blank">미리보기 →</a>
+    <button class="btn btn-primary" onclick="saveAll()">💾 저장</button>
+  </div>
+</header>
+
+<nav class="tabs">
+  <button class="tab on" data-tab="basic" onclick="showTab('basic')">기본 정보</button>
+  <button class="tab" data-tab="date" onclick="showTab('date')">날짜·장소</button>
+  <button class="tab" data-tab="message" onclick="showTab('message')">인사말</button>
+  <button class="tab" data-tab="photos" onclick="showTab('photos')">사진</button>
+  <button class="tab" data-tab="account" onclick="showTab('account')">계좌</button>
+  <button class="tab" data-tab="rsvp" onclick="showTab('rsvp')">RSVP</button>
+</nav>
+
+<main>
+
+<!-- ══ 기본 정보 ══ -->
+<div id="pane-basic" class="pane on">
+  <div class="banner">
+    여기서 수정한 내용은 <strong>저장</strong> 버튼을 눌러야 청첩장에 반영됩니다.<br>
+    저장 후 <strong>미리보기 →</strong> 버튼으로 결과를 확인하세요.
+  </div>
+  <div class="sec">
+    <div class="sec-hd">신랑</div>
+    <div class="row2">
+      <div class="field"><label>이름</label><input id="g-name" type="text"/></div>
+      <div class="field"><label>전화번호</label><input id="g-phone" type="tel" placeholder="010-0000-0000"/></div>
+    </div>
+    <div class="row2">
+      <div class="field"><label>아버지 성함</label><input id="g-father" type="text"/></div>
+      <div class="field"><label>어머니 성함</label><input id="g-mother" type="text"/></div>
+    </div>
+  </div>
+  <div class="sec">
+    <div class="sec-hd">신부</div>
+    <div class="row2">
+      <div class="field"><label>이름</label><input id="b-name" type="text"/></div>
+      <div class="field"><label>전화번호</label><input id="b-phone" type="tel" placeholder="010-0000-0000"/></div>
+    </div>
+    <div class="row2">
+      <div class="field"><label>아버지 성함</label><input id="b-father" type="text"/></div>
+      <div class="field"><label>어머니 성함</label><input id="b-mother" type="text"/></div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ 날짜·장소 ══ -->
+<div id="pane-date" class="pane">
+  <div class="sec">
+    <div class="sec-hd">날짜 & 시간</div>
+    <div class="row3">
+      <div class="field"><label>연도</label><input id="d-year" type="number" min="2024" max="2030"/></div>
+      <div class="field"><label>월</label><input id="d-month" type="number" min="1" max="12"/></div>
+      <div class="field"><label>일</label><input id="d-day" type="number" min="1" max="31"/></div>
+    </div>
+    <div class="row2">
+      <div class="field"><label>요일</label><input id="d-dow" type="text" placeholder="토요일"/></div>
+      <div class="field"><label>시 (24시간)</label><input id="d-hour" type="number" min="0" max="23"/></div>
+    </div>
+    <div class="field" style="max-width:200px">
+      <label>분</label><input id="d-min" type="number" min="0" max="59"/>
+    </div>
+  </div>
+  <div class="sec">
+    <div class="sec-hd">예식장</div>
+    <div class="row2">
+      <div class="field"><label>웨딩홀 이름</label><input id="v-name" type="text"/></div>
+      <div class="field"><label>홀 이름 (선택)</label><input id="v-hall" type="text"/></div>
+    </div>
+    <div class="field"><label>주소</label><input id="v-addr" type="text"/></div>
+    <div class="field"><label>상세주소 (선택)</label><input id="v-addrd" type="text"/></div>
+    <div class="field">
+      <label>지도 iframe 임베드 URL (선택)</label>
+      <input id="v-mapurl" type="text" placeholder="카카오맵 또는 구글맵 임베드 URL"/>
+      <div class="field-hint">지도사이트에서 공유 → 지도 퍼가기 → iframe URL을 복사해서 입력하면 지도가 표시됩니다.</div>
+    </div>
+    <div class="row2">
+      <div class="field"><label>카카오맵 링크</label><input id="v-kakao" type="text"/></div>
+      <div class="field"><label>네이버지도 링크</label><input id="v-naver" type="text"/></div>
+    </div>
+    <div class="field"><label>주차 안내</label><input id="v-parking" type="text" placeholder="(선택)"/></div>
+    <div class="field"><label>지하철 안내</label><input id="v-subway" type="text" placeholder="(선택)"/></div>
+    <div class="field"><label>버스 안내</label><input id="v-bus" type="text" placeholder="(선택)"/></div>
+  </div>
+</div>
+
+<!-- ══ 인사말 ══ -->
+<div id="pane-message" class="pane">
+  <div class="sec">
+    <div class="sec-hd">초청 문구</div>
+    <div class="field">
+      <label>본문</label>
+      <textarea id="msg-inv" rows="10"></textarea>
+      <div class="field-hint">줄바꿈은 그대로 청첩장에 반영됩니다.</div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ 사진 ══ -->
+<div id="pane-photos" class="pane">
+  <div class="sec">
+    <div class="sec-hd">메인 사진 (커버 전체 배경)</div>
+    <div class="photo-zone" id="pz-main">
+      <input type="file" accept="image/*" onchange="uploadPhoto('main',this)"/>
+      <div class="pz-icon">📷</div>
+      <div class="pz-txt">클릭하거나 사진을 드래그해서 업로드</div>
+    </div>
+  </div>
+  <div class="sec">
+    <div class="sec-hd">피처드 사진 (인사말 아래)</div>
+    <div class="photo-zone" id="pz-featured">
+      <input type="file" accept="image/*" onchange="uploadPhoto('featured',this)"/>
+      <div class="pz-icon">📷</div>
+      <div class="pz-txt">클릭하거나 사진을 드래그해서 업로드</div>
+    </div>
+  </div>
+  <div class="row2">
+    <div class="sec">
+      <div class="sec-hd">신랑 사진</div>
+      <div class="photo-zone" id="pz-groom">
+        <input type="file" accept="image/*" onchange="uploadPhoto('groom',this)"/>
+        <div class="pz-icon">🤵</div>
+        <div class="pz-txt">업로드</div>
+      </div>
+    </div>
+    <div class="sec">
+      <div class="sec-hd">신부 사진</div>
+      <div class="photo-zone" id="pz-bride">
+        <input type="file" accept="image/*" onchange="uploadPhoto('bride',this)"/>
+        <div class="pz-icon">👰</div>
+        <div class="pz-txt">업로드</div>
+      </div>
+    </div>
+  </div>
+  <div class="sec">
+    <div class="sec-hd">갤러리 사진</div>
+    <div class="gl-grid" id="gl-grid"></div>
+    <div class="field-hint" style="margin-top:8px">여러 장을 한 번에 선택할 수 있습니다 · 순서는 업로드 순서대로 표시됩니다.</div>
+  </div>
+  <div class="storage">
+    <div class="storage-hd">
+      <span>저장 공간 사용량</span>
+      <span id="storage-used">계산 중...</span>
+    </div>
+    <div class="storage-track"><div class="storage-fill" id="storage-fill" style="width:0%"></div></div>
+    <div class="field-hint" style="margin-top:6px">
+      브라우저 로컬 저장소 기준 (약 5MB 제한) ·
+      용량 초과 시 갤러리 사진을 줄이거나 해상도를 낮춰서 업로드하세요.
+    </div>
+  </div>
+</div>
+
+<!-- ══ 계좌 ══ -->
+<div id="pane-account" class="pane">
+  <div class="acc-card">
+    <div class="acc-card-hd">신랑 계좌</div>
+    <div class="row2">
+      <div class="field"><label>예금주</label><input id="a0-owner" type="text"/></div>
+      <div class="field"><label>은행</label><input id="a0-bank" type="text"/></div>
+    </div>
+    <div class="field"><label>계좌번호</label><input id="a0-num" type="text" placeholder="000-0000-000000"/></div>
+  </div>
+  <div class="acc-card">
+    <div class="acc-card-hd">신부 계좌</div>
+    <div class="row2">
+      <div class="field"><label>예금주</label><input id="a1-owner" type="text"/></div>
+      <div class="field"><label>은행</label><input id="a1-bank" type="text"/></div>
+    </div>
+    <div class="field"><label>계좌번호</label><input id="a1-num" type="text" placeholder="000-0000-000000"/></div>
+  </div>
+  <div class="acc-card">
+    <div class="acc-card-hd">신랑 아버지 계좌</div>
+    <div class="row2">
+      <div class="field"><label>예금주</label><input id="a2-owner" type="text"/></div>
+      <div class="field"><label>은행</label><input id="a2-bank" type="text"/></div>
+    </div>
+    <div class="field"><label>계좌번호</label><input id="a2-num" type="text" placeholder="000-0000-000000"/></div>
+  </div>
+  <div class="acc-card">
+    <div class="acc-card-hd">신부 어머니 계좌</div>
+    <div class="row2">
+      <div class="field"><label>예금주</label><input id="a3-owner" type="text"/></div>
+      <div class="field"><label>은행</label><input id="a3-bank" type="text"/></div>
+    </div>
+    <div class="field"><label>계좌번호</label><input id="a3-num" type="text" placeholder="000-0000-000000"/></div>
+  </div>
+</div>
+
+<!-- ══ RSVP ══ -->
+<div id="pane-rsvp" class="pane">
+  <div class="sec">
+    <div class="sec-hd">RSVP 설정</div>
+    <div class="toggle-row">
+      <span class="toggle-lbl">RSVP 섹션 활성화</span>
+      <label class="toggle">
+        <input id="rsvp-en" type="checkbox"/>
+        <span class="toggle-sl"></span>
+      </label>
+    </div>
+    <div class="field" style="margin-top:8px">
+      <label>회신 마감일</label>
+      <input id="rsvp-dl" type="text" placeholder="예: 2026년 11월 14일"/>
+    </div>
+    <div class="field">
+      <label>참석 여부 폼 URL</label>
+      <input id="rsvp-form" type="url" placeholder="https://forms.gle/..."/>
+      <div class="field-hint">
+        Google Forms에서 무료로 폼을 만들고 링크를 붙여넣으면 "참석 여부 알리기" 버튼이 활성화됩니다.<br>
+        <a href="https://forms.google.com" target="_blank" style="color:var(--blue)">Google Forms 바로가기 →</a>
+      </div>
+    </div>
+    <div class="field">
+      <label>카카오톡 오픈채팅 URL (선택)</label>
+      <input id="rsvp-kakao" type="url" placeholder="https://open.kakao.com/..."/>
+    </div>
+  </div>
+</div>
+
+</main>
+
+<div id="toast"></div>
+
+<!-- ══ 클라우드 모달 ══ -->
+<div class="modal-bg hide" id="cloud-modal">
+  <div class="modal">
+    <div class="modal-hd">
+      <h2>☁️ 클라우드 동기화 설정</h2>
+      <button class="modal-close" onclick="closeCloudModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <!-- 연결 상태 -->
+      <div class="status-row status-off" id="cloud-status">
+        <div class="status-dot dot-off" id="cloud-dot"></div>
+        <span id="cloud-status-txt">연결 안 됨 · 아래 안내를 따라 설정해주세요</span>
+      </div>
+
+      <!-- 설정 가이드 -->
+      <div id="cloud-guide">
+        <p style="font-size:13px;font-weight:600;margin-bottom:10px">Firebase 무료 프로젝트 만들기 (최초 1회)</p>
+        <ol class="steps">
+          <li><a href="https://console.firebase.google.com" target="_blank">console.firebase.google.com</a> 접속 → Google 계정으로 로그인</li>
+          <li><strong>프로젝트 추가</strong> 클릭 → 이름 입력 (예: my-wedding) → Google Analytics 비활성화 → <strong>프로젝트 만들기</strong></li>
+          <li>프로젝트 홈에서 <strong>&lt;/&gt; 웹</strong> 버튼 클릭 → 앱 이름 입력 → <strong>앱 등록</strong></li>
+          <li>아래 <code style="background:#F3F4F6;padding:1px 5px;border-radius:3px">firebaseConfig = { ... }</code> 코드가 나오면 <strong>{ } 중괄호 안쪽 전체</strong>를 복사</li>
+          <li>왼쪽 메뉴 → <strong>Firestore Database</strong> → <strong>데이터베이스 만들기</strong> → <strong>테스트 모드</strong> → 위치: <strong>asia-northeast3</strong> → 완료</li>
+        </ol>
+      </div>
+
+      <!-- 설정 입력 -->
+      <div class="field" id="cloud-input-wrap">
+        <label>Firebase 설정 붙여넣기</label>
+        <textarea id="cloud-cfg-input" rows="7" placeholder='{
+  "apiKey": "AIza...",
+  "authDomain": "my-wedding.firebaseapp.com",
+  "projectId": "my-wedding",
+  "storageBucket": "my-wedding.appspot.com",
+  "messagingSenderId": "123456789",
+  "appId": "1:123456789:web:abc123"
+}'></textarea>
+        <div class="field-hint">{ } 안쪽 내용만 붙여넣으세요. apiKey, projectId 등이 포함되어야 합니다.</div>
+      </div>
+      <div style="display:flex;gap:8px;margin-top:4px">
+        <button class="btn btn-primary" onclick="connectCloud()" style="flex:1">연결하기</button>
+        <button class="btn btn-danger" id="disconnect-btn" onclick="disconnectCloud()" style="display:none">연결 해제</button>
+      </div>
+
+      <!-- 기기 연결 링크 (연결 후 표시) -->
+      <div id="device-link-wrap" style="display:none;margin-top:20px;border-top:1px solid var(--border);padding-top:20px">
+        <p style="font-size:13px;font-weight:600;margin-bottom:6px">📱 다른 기기에서 열기</p>
+        <p style="font-size:12px;color:var(--text2);margin-bottom:8px">아래 링크를 다른 기기에서 열면 자동으로 이 클라우드에 연결됩니다.</p>
+        <div class="link-box">
+          <input id="device-link" readonly/>
+          <button class="link-copy" onclick="copyDeviceLink()">복사</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="config.js"></script>
+<script>
+const $=id=>document.getElementById(id);
+let galleryImages=[];
+
+/* ══════════════════════════════
+   Firebase 클라우드 동기화
+══════════════════════════════ */
+let _db=null;
+
+function getFbCfg(){try{return JSON.parse(localStorage.getItem('wc_fb')||'null');}catch(e){return null;}}
+
+async function tryInitFirebase(cfg){
+  try{
+    if(!cfg)return false;
+    if(firebase.apps.length)firebase.apps[0].delete();
+    firebase.initializeApp(cfg);
+    _db=firebase.firestore();
+    await _db.collection('wedding').doc('config').get(); // 연결 테스트
+    return true;
+  }catch(e){
+    _db=null;
+    console.warn('Firebase init failed:',e.message);
+    return false;
+  }
+}
+
+async function cloudLoad(){
+  if(!_db)return null;
+  try{const s=await _db.collection('wedding').doc('config').get();return s.exists?s.data():null;}
+  catch(e){return null;}
+}
+
+async function cloudSave(data){
+  if(!_db)return;
+  await _db.collection('wedding').doc('config').set(data,{merge:true});
+}
+
+function updateCloudBtn(){
+  const btn=$('cloud-btn');
+  if(_db){btn.textContent='☁️ 연결됨';btn.className='btn btn-cloud-on';}
+  else{btn.textContent='☁️ 클라우드';btn.className='btn';}
+}
+
+/* 모달 열기/닫기 */
+window.openCloudModal=function(){
+  $('cloud-modal').classList.remove('hide');
+  const cfg=getFbCfg();
+  if(cfg&&_db){
+    showCloudConnected();
+  } else if(cfg){
+    $('cloud-cfg-input').value=JSON.stringify(cfg,null,2);
+  }
+};
+window.closeCloudModal=function(){$('cloud-modal').classList.add('hide');};
+
+function showCloudConnected(){
+  const s=$('cloud-status');
+  s.className='status-row status-ok';
+  $('cloud-dot').className='status-dot dot-ok';
+  const cfg=getFbCfg();
+  $('cloud-status-txt').textContent=`연결됨 · 프로젝트: ${cfg?.projectId||''}`;
+  $('cloud-guide').style.display='none';
+  $('cloud-input-wrap').style.display='none';
+  $('disconnect-btn').style.display='block';
+  $('device-link-wrap').style.display='block';
+  const link=`${location.origin}${location.pathname}#fb=${btoa(JSON.stringify(cfg))}`;
+  $('device-link').value=link;
+}
+
+window.connectCloud=async function(){
+  const raw=$('cloud-cfg-input').value.trim();
+  if(!raw){alert('Firebase 설정을 붙여넣어주세요.');return;}
+  try{
+    let cfg;
+    // { } 안쪽만 붙여넣은 경우 처리
+    const txt=raw.startsWith('{')?raw:`{${raw}}`;
+    cfg=JSON.parse(txt);
+    if(!cfg.apiKey||!cfg.projectId)throw new Error('apiKey 또는 projectId가 없습니다.');
+    const ok=await tryInitFirebase(cfg);
+    if(!ok)throw new Error('Firestore 연결에 실패했습니다.\nFirestore가 활성화되어 있는지 확인해주세요.');
+    localStorage.setItem('wc_fb',JSON.stringify(cfg));
+    updateCloudBtn();
+    showCloudConnected();
+    // 클라우드에 기존 데이터가 있으면 로드
+    const cloud=await cloudLoad();
+    if(cloud){
+      localStorage.setItem('wc_data',JSON.stringify(cloud));
+      populate();
+      toast('✅ 클라우드 연결 완료! 저장된 데이터를 불러왔습니다.');
+    } else {
+      toast('✅ 클라우드 연결 완료!');
+    }
+  }catch(e){
+    alert('연결 실패: '+e.message+'\n\nFirebase 설정을 다시 확인해주세요.');
+  }
+};
+
+window.disconnectCloud=function(){
+  if(!confirm('클라우드 연결을 해제할까요?\n로컬 데이터는 유지됩니다.'))return;
+  localStorage.removeItem('wc_fb');
+  _db=null;
+  if(firebase.apps.length)firebase.apps[0].delete();
+  updateCloudBtn();
+  closeCloudModal();
+  toast('클라우드 연결이 해제되었습니다.');
+};
+
+window.copyDeviceLink=function(){
+  const v=$('device-link').value;
+  navigator.clipboard.writeText(v).then(()=>toast('✅ 링크가 복사되었습니다!'));
+};
+
+/* URL 해시에서 Firebase 설정 자동 적용 (#fb=...) */
+async function checkHashSetup(){
+  const hash=location.hash;
+  if(!hash.startsWith('#fb='))return;
+  try{
+    const cfg=JSON.parse(atob(hash.slice(4)));
+    history.replaceState(null,'',location.pathname);
+    const ok=await tryInitFirebase(cfg);
+    if(ok){
+      localStorage.setItem('wc_fb',JSON.stringify(cfg));
+      updateCloudBtn();
+      const cloud=await cloudLoad();
+      if(cloud)localStorage.setItem('wc_data',JSON.stringify(cloud));
+      toast('✅ 새 기기에 클라우드 연결 완료!');
+    }
+  }catch(e){}
+}
+
+/* ── 초기값 로드 ── */
+function getSaved(){
+  try{return JSON.parse(localStorage.getItem('wc_data')||'{}');}catch(e){return {};}
+}
+function merge(base,over){
+  const r={...base};
+  for(const k in over){
+    if(over[k]&&typeof over[k]==='object'&&!Array.isArray(over[k]))
+      r[k]=merge(base[k]||{},over[k]);
+    else r[k]=over[k];
+  }
+  return r;
+}
+function val(obj,...keys){
+  let v=obj;
+  for(const k of keys){v=v?.[k];if(v===undefined)return '';}
+  return v??'';
+}
+
+function populate(){
+  const ov=getSaved();
+  const C2=merge(WEDDING_CONFIG,ov);
+  const acc=(i,k)=>(C2.accounts?.[i]?.[k])||'';
+
+  $('g-name').value=val(C2,'groom','name');
+  $('g-phone').value=val(C2,'groom','phone');
+  $('g-father').value=val(C2,'groom','father');
+  $('g-mother').value=val(C2,'groom','mother');
+  $('b-name').value=val(C2,'bride','name');
+  $('b-phone').value=val(C2,'bride','phone');
+  $('b-father').value=val(C2,'bride','father');
+  $('b-mother').value=val(C2,'bride','mother');
+
+  $('d-year').value=val(C2,'date','year');
+  $('d-month').value=val(C2,'date','month');
+  $('d-day').value=val(C2,'date','day');
+  $('d-dow').value=val(C2,'date','dayOfWeek');
+  $('d-hour').value=val(C2,'date','hour');
+  $('d-min').value=val(C2,'date','minute');
+
+  $('v-name').value=val(C2,'venue','name');
+  $('v-hall').value=val(C2,'venue','hall');
+  $('v-addr').value=val(C2,'venue','address');
+  $('v-addrd').value=val(C2,'venue','addressDetail');
+  $('v-mapurl').value=val(C2,'venue','mapUrl');
+  $('v-kakao').value=val(C2,'venue','kakaoMapUrl');
+  $('v-naver').value=val(C2,'venue','naverMapUrl');
+  $('v-parking').value=val(C2,'venue','parking');
+  $('v-subway').value=val(C2,'venue','subway');
+  $('v-bus').value=val(C2,'venue','bus');
+
+  $('msg-inv').value=val(C2,'message','invitation');
+
+  for(let i=0;i<4;i++){
+    $(`a${i}-owner`).value=acc(i,'owner');
+    $(`a${i}-bank`).value=acc(i,'bank');
+    $(`a${i}-num`).value=acc(i,'number');
+  }
+
+  $('rsvp-en').checked=!!val(C2,'rsvp','enabled');
+  $('rsvp-dl').value=val(C2,'rsvp','deadline');
+  $('rsvp-form').value=val(C2,'rsvp','formUrl');
+  $('rsvp-kakao').value=val(C2,'rsvp','kakaoUrl');
+
+  restorePhoto('main');
+  restorePhoto('featured');
+  restorePhoto('groom');
+  restorePhoto('bride');
+  restoreGallery();
+  updateStorage();
+}
+
+/* ── 사진 ── */
+const PZ_DEF={
+  main:{icon:'📷',txt:'클릭하거나 사진을 드래그해서 업로드'},
+  featured:{icon:'📷',txt:'클릭하거나 사진을 드래그해서 업로드'},
+  groom:{icon:'🤵',txt:'업로드'},
+  bride:{icon:'👰',txt:'업로드'},
+};
+
+function restorePhoto(key){
+  const src=localStorage.getItem('wc_img_'+key);
+  if(src)applyPhotoZone(key,src);
+}
+
+function applyPhotoZone(key,src){
+  const z=$('pz-'+key);
+  z.classList.add('has');
+  z.innerHTML=`<img src="${src}"/>
+    <button class="pz-del" onclick="delPhoto('${key}')">✕ 삭제</button>
+    <input type="file" accept="image/*" onchange="uploadPhoto('${key}',this)"
+      style="position:absolute;inset:0;opacity:0;cursor:pointer"/>`;
+}
+
+window.uploadPhoto=function(key,input){
+  const file=input.files[0];if(!file)return;
+  compress(file,1200).then(src=>{
+    localStorage.setItem('wc_img_'+key,src);
+    applyPhotoZone(key,src);
+    updateStorage();
+  });
+};
+
+window.delPhoto=function(key){
+  localStorage.removeItem('wc_img_'+key);
+  const z=$('pz-'+key);z.classList.remove('has');
+  const d=PZ_DEF[key];
+  z.innerHTML=`<input type="file" accept="image/*" onchange="uploadPhoto('${key}',this)"/>
+    <div class="pz-icon">${d.icon}</div><div class="pz-txt">${d.txt}</div>`;
+  updateStorage();
+};
+
+/* ── 갤러리 ── */
+function restoreGallery(){
+  try{galleryImages=JSON.parse(localStorage.getItem('wc_img_gallery')||'[]');}catch(e){galleryImages=[];}
+  renderGallery();
+}
+
+function renderGallery(){
+  const grid=$('gl-grid');grid.innerHTML='';
+  galleryImages.forEach((src,i)=>{
+    const el=document.createElement('div');el.className='gl-item';
+    el.innerHTML=`<img src="${src}"/><button class="gl-del" onclick="delGallery(${i})">✕</button>`;
+    grid.appendChild(el);
+  });
+  const add=document.createElement('div');add.className='gl-add';
+  add.innerHTML=`<input type="file" accept="image/*" multiple onchange="uploadGallery(this)"/>
+    <div style="font-size:24px">+</div><div>사진 추가</div>`;
+  grid.appendChild(add);
+}
+
+window.uploadGallery=function(input){
+  const files=[...input.files];if(!files.length)return;
+  const promises=files.map(f=>compress(f,1000));
+  Promise.all(promises).then(srcs=>{
+    galleryImages.push(...srcs);
+    localStorage.setItem('wc_img_gallery',JSON.stringify(galleryImages));
+    renderGallery();updateStorage();
+  });
+};
+
+window.delGallery=function(i){
+  galleryImages.splice(i,1);
+  localStorage.setItem('wc_img_gallery',JSON.stringify(galleryImages));
+  renderGallery();updateStorage();
+};
+
+/* ── 이미지 압축 ── */
+function compress(file,maxW){
+  return new Promise(res=>{
+    const img=new Image(),url=URL.createObjectURL(file);
+    img.onload=()=>{
+      URL.revokeObjectURL(url);
+      const sc=Math.min(1,maxW/img.width);
+      const cv=document.createElement('canvas');
+      cv.width=img.width*sc;cv.height=img.height*sc;
+      cv.getContext('2d').drawImage(img,0,0,cv.width,cv.height);
+      res(cv.toDataURL('image/jpeg',.82));
+    };
+    img.src=url;
+  });
+}
+
+/* ── 저장 공간 ── */
+function updateStorage(){
+  let total=0;
+  for(const k in localStorage)if(k.startsWith('wc_'))total+=localStorage[k].length*2;
+  const mb=(total/1048576).toFixed(2);
+  const pct=Math.min(total/(5*1048576)*100,100);
+  $('storage-used').textContent=`${mb} MB / ~5 MB`;
+  const f=$('storage-fill');f.style.width=pct+'%';
+  f.className='storage-fill'+(pct>80?' danger':pct>60?' warn':'');
+}
+
+/* ── 저장 ── */
+window.saveAll=async function(){
+  const data={
+    groom:{name:$('g-name').value,phone:$('g-phone').value,father:$('g-father').value,mother:$('g-mother').value},
+    bride:{name:$('b-name').value,phone:$('b-phone').value,father:$('b-father').value,mother:$('b-mother').value},
+    date:{year:+$('d-year').value,month:+$('d-month').value,day:+$('d-day').value,
+      dayOfWeek:$('d-dow').value,hour:+$('d-hour').value,minute:+$('d-min').value},
+    message:{invitation:$('msg-inv').value},
+    venue:{name:$('v-name').value,hall:$('v-hall').value,address:$('v-addr').value,
+      addressDetail:$('v-addrd').value,mapUrl:$('v-mapurl').value,
+      kakaoMapUrl:$('v-kakao').value,naverMapUrl:$('v-naver').value,
+      parking:$('v-parking').value,subway:$('v-subway').value,bus:$('v-bus').value},
+    accounts:[0,1,2,3].map(i=>({
+      owner:$(`a${i}-owner`).value,bank:$(`a${i}-bank`).value,
+      number:$(`a${i}-num`).value,kakaoPayUrl:'',
+    })),
+    rsvp:{enabled:$('rsvp-en').checked,deadline:$('rsvp-dl').value,
+      formUrl:$('rsvp-form').value,kakaoUrl:$('rsvp-kakao').value},
+  };
+  try{
+    localStorage.setItem('wc_data',JSON.stringify(data));
+  }catch(e){
+    if(e.name==='QuotaExceededError')
+      alert('저장 공간이 부족합니다. 갤러리 사진을 줄이거나 해상도를 낮춰 다시 시도해주세요.');
+    else alert('저장 중 오류가 발생했습니다: '+e.message);
+    return;
+  }
+  if(_db){
+    try{
+      await cloudSave(data);
+      toast('✅ 저장 완료! (로컬 + 클라우드)');
+    }catch(e){
+      toast('⚠️ 로컬 저장 완료 (클라우드 저장 실패: '+e.message+')');
+    }
+  } else {
+    toast('✅ 저장되었습니다!');
+  }
+};
+
+/* ── 초기화 ── */
+window.resetAll=function(){
+  if(!confirm('모든 수정 내용과 업로드한 사진을 초기화할까요?\n이 작업은 되돌릴 수 없습니다.'))return;
+  Object.keys(localStorage).filter(k=>k.startsWith('wc_')).forEach(k=>localStorage.removeItem(k));
+  galleryImages=[];
+  populate();
+  toast('초기화되었습니다.');
+};
+
+/* ── 탭 ── */
+window.showTab=function(name){
+  document.querySelectorAll('.pane').forEach(el=>el.classList.remove('on'));
+  document.querySelectorAll('.tab').forEach(el=>el.classList.remove('on'));
+  $('pane-'+name).classList.add('on');
+  document.querySelector(`[data-tab="${name}"]`).classList.add('on');
+};
+
+/* ── 토스트 ── */
+window.toast=function(msg){
+  const el=$('toast');el.textContent=msg;el.classList.add('show');
+  setTimeout(()=>el.classList.remove('show'),2500);
+};
+
+/* ── 앱 시작 ── */
+(async()=>{
+  await checkHashSetup();
+  const cfg=getFbCfg();
+  if(cfg){
+    const ok=await tryInitFirebase(cfg);
+    if(ok){
+      updateCloudBtn();
+      const cloud=await cloudLoad();
+      if(cloud)localStorage.setItem('wc_data',JSON.stringify(cloud));
+    }
+  }
+  populate();
+})();
+</script>
+</body>
+</html>

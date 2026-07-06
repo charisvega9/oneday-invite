@@ -1,0 +1,11 @@
+# 개발 도구
+.claude/
+node_modules/
+package-lock.json
+
+# 관련 없는 폴더
+map-app/
+
+# OS
+.DS_Store
+Thumbs.db

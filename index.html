@@ -1,0 +1,684 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1"/>
+  <title>청첩장</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@200;300;400;500;700&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300;1,400&display=swap" rel="stylesheet"/>
+  <style>
+    :root{
+      /* Pantone 14-4318 TSX = 가장 진한 색 (#9EC4D7) */
+      --p5:#9EC4D7;   /* Pantone 14-4318 TSX — 팔레트 최대 진한색 */
+      --p4:#B2D8EC;
+      --p3:#C8E8F5;
+      --p2:#DEF2FA;
+      --p1:#F2FAFD;   /* 가장 밝은 틴트 */
+      --p:#9EC4D7;    /* alias */
+      --s:#E0F2FA;
+      --a:#9EC4D7;
+      --t:#1A3545;
+      --bg:#F5FBFD;
+      --serif:'DM Sans','Noto Sans KR',sans-serif;
+      --kr:'Noto Sans KR',sans-serif;
+    }
+    *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+    html{scroll-behavior:smooth}
+    body{font-family:var(--kr);background:var(--bg);color:var(--t);max-width:480px;margin:0 auto;overflow-x:hidden}
+
+    /* ── 진행바 ── */
+    #progress{position:fixed;top:0;left:0;height:2px;background:var(--p);width:0;z-index:999;transition:width .1s}
+
+    /* ── 눈 ── */
+    #snow{position:fixed;inset:0;pointer-events:none;z-index:200;max-width:480px;left:50%;transform:translateX(-50%)}
+
+    /* ── BGM ── */
+    #bgm{position:fixed;right:20px;bottom:28px;z-index:300;display:none;flex-direction:column;align-items:center;gap:5px}
+    .bgm-disc{width:48px;height:48px;border-radius:50%;position:relative;cursor:pointer;box-shadow:0 4px 20px rgba(74,144,168,.3)}
+    .bgm-disc svg{width:48px;height:48px;border-radius:50%}
+    .bgm-center{position:absolute;inset:13px;border-radius:50%;background:#fff;display:flex;align-items:center;justify-content:center}
+    .bgm-disc.spin{animation:spin 5s linear infinite}
+    .bgm-lbl{font-size:9px;letter-spacing:1px;color:var(--a);background:rgba(255,255,255,.92);padding:2px 8px;border-radius:8px;white-space:nowrap}
+
+    /* ── 토스트 ── */
+    #toast{position:fixed;bottom:90px;left:50%;transform:translateX(-50%) translateY(10px);background:rgba(30,58,74,.9);color:#fff;padding:10px 22px;border-radius:2px;font-size:12px;letter-spacing:1px;opacity:0;transition:all .3s;pointer-events:none;white-space:nowrap;z-index:500}
+    #toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+    /* ══════════════════════════════
+       1. 커버 (메인 사진)
+    ══════════════════════════════ */
+    #cover{
+      height:100svh;min-height:580px;
+      display:flex;flex-direction:column;
+      align-items:center;justify-content:flex-end;
+      padding-bottom:64px;
+      position:relative;overflow:hidden;
+    }
+    .cover-bg{
+      position:absolute;inset:0;
+      background:linear-gradient(160deg,#F2FAFD 0%,#DEF2FA 25%,#C8E8F5 50%,#B2D8EC 75%,#9EC4D7 100%);
+    }
+    .cover-bg img{width:100%;height:100%;object-fit:cover;display:block}
+    .cover-overlay{position:absolute;inset:0;background:linear-gradient(to top,rgba(158,196,215,.45) 0%,rgba(178,216,236,.08) 55%,transparent 100%)}
+
+    .cover-card{
+      position:relative;z-index:2;text-align:center;
+      background:rgba(255,255,255,.14);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
+      border:1px solid rgba(255,255,255,.3);border-radius:2px;
+      padding:36px 44px 32px;width:calc(100% - 40px);max-width:360px;
+    }
+    .cv-en{font-family:var(--serif);font-style:italic;font-size:10px;letter-spacing:5px;color:rgba(255,255,255,.7);margin-bottom:22px}
+    .cv-names{font-family:var(--serif);font-size:36px;font-weight:300;color:#fff;letter-spacing:5px;line-height:1;opacity:0;animation:fadeUp .9s .3s forwards}
+    .cv-amp{display:block;font-style:italic;font-size:20px;color:rgba(255,255,255,.55);margin:5px 0;letter-spacing:2px}
+    .cv-date{margin-top:22px;font-size:11px;letter-spacing:4px;color:rgba(255,255,255,.7);opacity:0;animation:fadeUp .9s .6s forwards}
+    .cv-venue{margin-top:6px;font-size:10px;letter-spacing:2px;color:rgba(255,255,255,.5);opacity:0;animation:fadeUp .9s .8s forwards}
+
+    .cv-scroll{position:absolute;bottom:24px;left:50%;transform:translateX(-50%);z-index:3;display:flex;flex-direction:column;align-items:center;gap:5px;opacity:0;animation:fadeIn 1s 1.5s forwards}
+    .cv-scroll-line{width:1px;height:32px;background:linear-gradient(to bottom,rgba(255,255,255,0),rgba(255,255,255,.6),rgba(255,255,255,0));animation:scrollPulse 2s ease-in-out infinite}
+    .cv-scroll-txt{font-size:8px;letter-spacing:3px;color:rgba(255,255,255,.45)}
+
+    /* ══════════════════════════════
+       2. 인사말
+    ══════════════════════════════ */
+    #greeting{padding:72px 28px;background:#fff}
+    .greet-hosts{text-align:center;font-size:13px;line-height:2.4;color:#6a90a8;margin-bottom:28px}
+    .greet-body{text-align:center;font-size:14px;line-height:2.5;color:var(--t);white-space:pre-line;letter-spacing:.3px}
+
+    /* ══════════════════════════════
+       3. 피처드 사진
+    ══════════════════════════════ */
+    #featured{position:relative;overflow:hidden;background:#d4e8f4}
+    #featured img{width:100%;display:block;max-height:560px;object-fit:cover}
+    .featured-ph{
+      height:420px;display:flex;align-items:center;justify-content:center;
+      background:linear-gradient(135deg,#F2FAFD 0%,#C8E8F5 50%,#9EC4D7 100%);
+      color:rgba(26,53,69,.45);font-size:13px;letter-spacing:2px;flex-direction:column;gap:10px;
+    }
+
+    /* ══════════════════════════════
+       4. 웨딩 달력
+    ══════════════════════════════ */
+    #schedule{padding:72px 28px;background:linear-gradient(180deg,#fff 0%,#F2FAFD 60%,#DEF2FA 100%);text-align:center}
+    .big-date-num{font-family:var(--serif);font-size:80px;font-weight:300;color:var(--t);letter-spacing:-3px;line-height:1}
+    .big-date-label{font-size:11px;letter-spacing:5px;color:var(--p5);margin:6px 0 3px}
+    .big-date-time{font-size:13px;letter-spacing:3px;color:var(--p4)}
+
+    /* 캘린더 */
+    .cal{margin:36px auto 0;max-width:290px;border:1px solid var(--p3);border-radius:4px;overflow:hidden}
+    .cal-hd{background:linear-gradient(105deg,var(--p3),var(--p5));color:#fff;padding:13px 16px;display:flex;justify-content:space-between;align-items:center}
+    .cal-hd-m{font-family:var(--serif);font-style:italic;font-size:15px;letter-spacing:2px}
+    .cal-hd-y{font-size:11px;letter-spacing:3px;opacity:.8}
+    .cal-bd{padding:14px}
+    .cal-dow{display:grid;grid-template-columns:repeat(7,1fr);text-align:center;margin-bottom:6px}
+    .cal-dow span{font-size:10px;letter-spacing:.5px;color:var(--p4);padding:3px 0}
+    .cal-days{display:grid;grid-template-columns:repeat(7,1fr);gap:1px;text-align:center}
+    .cal-d{font-size:12px;padding:7px 2px;color:var(--p5);border-radius:2px;position:relative}
+    .cal-d.mark{background:linear-gradient(135deg,var(--p4),var(--p5));color:#fff;font-weight:500}
+    .cal-d.mark::after{content:'♥';position:absolute;bottom:0;left:50%;transform:translateX(-50%);font-size:6px;color:rgba(255,255,255,.7)}
+    .cal-d.dim{color:var(--p2)}
+
+    /* 카운트다운 */
+    .cntd{display:flex;margin-top:32px;border:1px solid var(--p3);border-radius:4px;overflow:hidden;background:linear-gradient(180deg,#fff,#F2FAFD)}
+    .cntd-c{flex:1;padding:18px 4px 14px;text-align:center;border-right:1px solid var(--p3)}
+    .cntd-c:last-child{border-right:none}
+    .cntd-v{font-family:var(--serif);font-size:38px;font-weight:300;color:var(--p5);line-height:1}
+    .cntd-l{font-size:9px;letter-spacing:2px;color:var(--p4);margin-top:5px}
+    .dday-pill{display:inline-block;font-family:var(--serif);font-style:italic;font-size:13px;letter-spacing:2px;color:var(--p5);border:1px solid var(--p4);padding:4px 20px;border-radius:20px;margin-top:18px;background:linear-gradient(105deg,#F2FAFD,#DEF2FA)}
+
+    /* ══════════════════════════════
+       5. 신랑 신부 소개
+    ══════════════════════════════ */
+    #profile{padding:72px 28px;background:linear-gradient(180deg,#F2FAFD 0%,#fff 100%)}
+    .profile-grid{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-top:8px}
+    .profile-card{text-align:center}
+    .profile-photo{
+      width:100%;aspect-ratio:3/4;
+      border-radius:2px;overflow:hidden;
+      background:linear-gradient(160deg,#F2FAFD 0%,#C8E8F5 50%,#9EC4D7 100%);
+      margin-bottom:16px;position:relative;
+    }
+    .profile-photo img{width:100%;height:100%;object-fit:cover;display:block}
+    .profile-photo-ph{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:rgba(26,53,69,.4);font-size:11px;letter-spacing:1px;flex-direction:column;gap:6px}
+    .profile-role{font-size:10px;letter-spacing:3px;color:var(--p5);margin-bottom:6px}
+    .profile-name{font-size:20px;font-weight:400;letter-spacing:3px;color:var(--t);margin-bottom:8px}
+    .profile-family{font-size:11px;color:var(--p4);line-height:2;letter-spacing:.5px;margin-bottom:12px}
+    .profile-intro{font-size:12px;color:var(--p5);line-height:1.9;letter-spacing:.3px;word-break:keep-all}
+    .profile-call{display:inline-flex;align-items:center;gap:4px;margin-top:12px;padding:7px 14px;background:linear-gradient(105deg,var(--p2),var(--p3));color:var(--t);border-radius:2px;font-size:11px;text-decoration:none;letter-spacing:1px;transition:all .2s}
+    .profile-call:hover{background:linear-gradient(105deg,var(--p3),var(--p5));color:#fff}
+
+    /* ══════════════════════════════
+       6. 타임라인
+    ══════════════════════════════ */
+    #timeline{padding:72px 28px;background:linear-gradient(180deg,#DEF2FA 0%,#F2FAFD 40%,#fff 100%)}
+    .tl-wrap{margin-top:8px;position:relative;padding-left:28px}
+    .tl-line{position:absolute;left:5px;top:0;bottom:0;width:1px;background:linear-gradient(to bottom,var(--p5),var(--p3),rgba(222,242,250,.2))}
+    .tl-item{position:relative;padding:0 0 44px 28px}
+    .tl-item:last-child{padding-bottom:0}
+    .tl-dot{position:absolute;left:-5px;top:5px;width:11px;height:11px;border-radius:50%;border:2px solid var(--p3);background:#fff;transition:all .4s}
+    .tl-item.in .tl-dot{background:linear-gradient(135deg,var(--p3),var(--p5));border-color:var(--p5)}
+    .tl-date{font-family:var(--serif);font-style:italic;font-size:12px;letter-spacing:2px;color:var(--p5);margin-bottom:5px}
+    .tl-title{font-size:15px;font-weight:500;letter-spacing:1px;color:var(--t);margin-bottom:5px}
+    .tl-desc{font-size:13px;color:var(--p5);line-height:1.9;letter-spacing:.3px;word-break:keep-all}
+
+    /* ══════════════════════════════
+       7. 포토 갤러리
+    ══════════════════════════════ */
+    #gallery{padding:72px 0;background:linear-gradient(180deg,#F2FAFD 0%,#DEF2FA 100%)}
+    #gallery .sec-pad{padding:0 28px}
+    .gl-scroll{display:flex;gap:6px;overflow-x:auto;scroll-snap-type:x mandatory;padding:0 28px 4px;scrollbar-width:none}
+    .gl-scroll::-webkit-scrollbar{display:none}
+    .gl-item{flex:0 0 68vw;max-width:280px;scroll-snap-align:start;border-radius:2px;overflow:hidden;background:linear-gradient(160deg,#F2FAFD,#9EC4D7);aspect-ratio:3/4}
+    .gl-item img{width:100%;height:100%;object-fit:cover;display:block}
+    .gl-dots{display:flex;justify-content:center;gap:6px;padding:14px 0 0}
+    .gl-dot{width:5px;height:5px;border-radius:50%;background:var(--p3);transition:all .3s;cursor:pointer}
+    .gl-dot.on{background:var(--p5);width:14px;border-radius:3px}
+
+    /* ══════════════════════════════
+       8. 오시는 길
+    ══════════════════════════════ */
+    #location{padding:72px 28px;background:#fff}
+    .loc-name{text-align:center;font-size:18px;font-weight:400;letter-spacing:2px;color:var(--t);margin-bottom:4px}
+    .loc-hall{text-align:center;font-size:12px;letter-spacing:2px;color:var(--p5);margin-bottom:6px}
+    .loc-addr{text-align:center;font-size:12px;color:var(--p4);line-height:1.9;margin-bottom:24px}
+    .map-box{width:100%;border-radius:4px;overflow:hidden;background:linear-gradient(135deg,#F2FAFD,#9EC4D7);margin-bottom:12px}
+    .map-box iframe{width:100%;height:220px;border:none;display:block}
+    .map-ph{height:220px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;color:rgba(26,53,69,.4);font-size:12px;letter-spacing:1px}
+    .map-btns{display:flex;gap:8px;margin-bottom:28px}
+    .map-btn{flex:1;padding:13px;text-align:center;border:1px solid var(--p3);border-radius:2px;background:#fff;color:var(--t);font-family:var(--kr);font-size:12px;letter-spacing:1px;text-decoration:none;display:block;transition:all .2s}
+    .map-btn:hover{background:linear-gradient(105deg,var(--p3),var(--p5));border-color:var(--p5);color:#fff}
+    .tp-list{margin-top:4px}
+    .tp-item{display:flex;gap:14px;padding:14px 0;border-bottom:1px solid var(--p1);align-items:flex-start}
+    .tp-item:last-child{border-bottom:none}
+    .tp-ic{width:32px;height:32px;background:linear-gradient(135deg,var(--p1),var(--p3));border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0}
+    .tp-txt{font-size:13px;color:var(--p5);line-height:1.8}
+    .tp-lbl{font-weight:500;color:var(--t);display:block;margin-bottom:2px}
+
+    /* ══════════════════════════════
+       9. 연락처
+    ══════════════════════════════ */
+    #contact{padding:72px 28px;background:linear-gradient(180deg,#F2FAFD,#fff)}
+    .ct-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+    .ct-card{background:#fff;border:1px solid var(--p3);border-radius:4px;padding:20px 16px;text-align:center}
+    .ct-role{font-size:10px;letter-spacing:3px;color:var(--p5);margin-bottom:8px}
+    .ct-name{font-size:16px;font-weight:400;letter-spacing:2px;color:var(--t);margin-bottom:14px}
+    .ct-btn{display:flex;align-items:center;justify-content:center;gap:5px;padding:9px 12px;background:linear-gradient(105deg,var(--p1),var(--p3));color:var(--t);border-radius:2px;font-size:11px;text-decoration:none;letter-spacing:1px;transition:all .2s}
+    .ct-btn:hover{background:linear-gradient(105deg,var(--p3),var(--p5));color:#fff}
+
+    /* ══════════════════════════════
+       10. 계좌
+    ══════════════════════════════ */
+    #account{padding:72px 28px;background:linear-gradient(180deg,#fff,#F2FAFD)}
+    .acc-tabs{display:flex;border-bottom:1px solid var(--p3);margin-bottom:24px}
+    .acc-tab{flex:1;padding:12px;text-align:center;font-size:12px;letter-spacing:2px;color:var(--p4);cursor:pointer;border-bottom:2px solid transparent;transition:all .2s}
+    .acc-tab.on{color:var(--t);border-bottom-color:var(--p5)}
+    .acc-pnl{display:none}.acc-pnl.on{display:block}
+    .acc-item{display:flex;align-items:center;gap:12px;padding:16px;background:linear-gradient(105deg,var(--p1),#DEF2FA);border-radius:4px;margin-bottom:8px}
+    .acc-info{flex:1;min-width:0}
+    .acc-owner{font-size:13px;font-weight:500;color:var(--t);margin-bottom:3px}
+    .acc-bank{font-size:11px;color:var(--p4)}
+    .acc-num{font-size:13px;color:var(--p5);margin-top:3px;letter-spacing:.5px}
+    .cp-btn{flex-shrink:0;padding:8px 14px;background:#fff;border:1px solid var(--p3);border-radius:2px;font-size:11px;font-family:var(--kr);color:var(--t);cursor:pointer;letter-spacing:1px;transition:all .2s;white-space:nowrap}
+    .cp-btn:hover,.cp-btn.done{background:linear-gradient(105deg,var(--p3),var(--p5));border-color:var(--p5);color:#fff}
+
+    /* ══════════════════════════════
+       11. RSVP
+    ══════════════════════════════ */
+    #rsvp{padding:72px 28px;background:linear-gradient(180deg,#F2FAFD,#DEF2FA);text-align:center}
+    .rsvp-box{border:1px solid var(--p3);border-radius:4px;padding:32px 24px;background:#fff;margin-top:8px}
+    .rsvp-desc{font-size:13px;color:var(--p5);line-height:2.1;letter-spacing:.3px;margin-bottom:10px}
+    .rsvp-deadline{display:inline-block;font-size:11px;letter-spacing:2px;color:var(--p5);margin-bottom:28px;padding:4px 16px;border:1px solid var(--p3);border-radius:20px;background:linear-gradient(105deg,var(--p1),var(--p3))}
+    .rsvp-btns{display:flex;gap:8px;flex-wrap:wrap;justify-content:center}
+    .rsvp-btn{flex:1;min-width:130px;padding:14px 12px;border-radius:2px;font-family:var(--kr);font-size:13px;letter-spacing:1px;cursor:pointer;text-decoration:none;display:flex;align-items:center;justify-content:center;gap:6px;transition:all .2s}
+    .rsvp-btn-main{background:linear-gradient(105deg,var(--p3),var(--p5));color:#fff;border:none}
+    .rsvp-btn-main:hover{background:linear-gradient(105deg,var(--p4),var(--p5));opacity:.9}
+    .rsvp-btn-sub{background:#fff;color:var(--t);border:1px solid var(--p3)}
+    .rsvp-btn-sub:hover{background:linear-gradient(105deg,var(--p1),var(--p3))}
+
+    /* ══════════════════════════════
+       섹션 공통 헤더
+    ══════════════════════════════ */
+    .sec-en{font-family:var(--serif);font-style:italic;font-size:11px;letter-spacing:5px;color:var(--p);text-align:center;display:block;margin-bottom:10px}
+    .sec-kr{font-size:18px;font-weight:400;letter-spacing:3px;text-align:center;color:var(--t);margin-bottom:36px}
+    .thin-line{width:32px;height:1px;background:var(--p);margin:12px auto 28px}
+
+    /* ── 푸터 ── */
+    footer{text-align:center;padding:60px 28px 80px;background:var(--t)}
+    .ft-names{font-family:var(--serif);font-weight:300;font-size:24px;letter-spacing:7px;color:rgba(255,255,255,.85);margin-bottom:10px}
+    .ft-date{font-size:11px;letter-spacing:3px;color:rgba(255,255,255,.3);margin-bottom:32px}
+    .ft-divider{width:24px;height:1px;background:rgba(255,255,255,.15);margin:0 auto 24px}
+    .ft-msg{font-size:12px;line-height:2.3;letter-spacing:.5px;color:rgba(255,255,255,.35)}
+
+    /* ── 애니메이션 ── */
+    @keyframes fadeUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:none}}
+    @keyframes fadeIn{from{opacity:0}to{opacity:1}}
+    @keyframes spin{to{transform:rotate(360deg)}}
+    @keyframes scrollPulse{0%,100%{opacity:1;transform:scaleY(1)}50%{opacity:.35;transform:scaleY(.5)}}
+    @keyframes spOut{0%{opacity:1;transform:translate(var(--tx),var(--ty)) scale(1)}100%{opacity:0;transform:translate(calc(var(--tx)*2.8),calc(var(--ty)*2.8)) scale(0)}}
+
+    /* reveal */
+    .rv{opacity:0;transform:translateY(28px);transition:opacity .85s ease,transform .85s ease}
+    .rv.in{opacity:1;transform:none}
+    .rv-l{opacity:0;transform:translateX(-24px);transition:opacity .85s ease,transform .85s ease}
+    .rv-l.in{opacity:1;transform:none}
+    .rv-r{opacity:0;transform:translateX(24px);transition:opacity .85s ease,transform .85s ease}
+    .rv-r.in{opacity:1;transform:none}
+    .rv-d1{transition-delay:.1s!important}
+    .rv-d2{transition-delay:.2s!important}
+    .rv-d3{transition-delay:.3s!important}
+    .rv-d4{transition-delay:.4s!important}
+
+    /* 반짝이 */
+    .sp{position:fixed;border-radius:50%;pointer-events:none;z-index:250;animation:spOut .6s ease forwards}
+  </style>
+</head>
+<body>
+
+<div id="progress"></div>
+<canvas id="snow"></canvas>
+
+<!-- BGM -->
+<div id="bgm">
+  <div class="bgm-disc" id="bgm-disc" onclick="toggleBgm()">
+    <svg viewBox="0 0 48 48"><defs><linearGradient id="dg" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#C8E2EE"/><stop offset="50%" stop-color="#9EC4D7"/><stop offset="100%" stop-color="#4A8EA8"/></linearGradient></defs><circle cx="24" cy="24" r="24" fill="url(#dg)"/></svg>
+    <div class="bgm-center">
+      <svg id="bgm-play" width="13" height="13" viewBox="0 0 24 24" fill="var(--a)"><polygon points="5,3 19,12 5,21"/></svg>
+      <svg id="bgm-pause" width="13" height="13" viewBox="0 0 24 24" fill="var(--a)" style="display:none"><rect x="6" y="4" width="4" height="16" rx="1"/><rect x="14" y="4" width="4" height="16" rx="1"/></svg>
+    </div>
+  </div>
+  <div class="bgm-lbl" id="bgm-lbl">♪ BGM</div>
+  <audio id="bgm-audio" loop></audio>
+</div>
+<div id="toast"></div>
+
+<!-- ══ 1. 커버 (메인 사진) ══ -->
+<section id="cover">
+  <div class="cover-bg" id="cover-bg">
+    <!-- 사진 또는 그라디언트 배경 -->
+  </div>
+  <div class="cover-overlay"></div>
+  <div class="cover-card">
+    <div class="cv-en">WINTER WEDDING INVITATION</div>
+    <div class="cv-names">
+      <span id="cv-g">신랑</span>
+      <span class="cv-amp">&amp;</span>
+      <span id="cv-b">신부</span>
+    </div>
+    <div class="cv-date" id="cv-date">0000 · 00 · 00</div>
+    <div class="cv-venue" id="cv-venue">웨딩홀</div>
+  </div>
+  <div class="cv-scroll">
+    <div class="cv-scroll-line"></div>
+    <div class="cv-scroll-txt">SCROLL</div>
+  </div>
+</section>
+
+<!-- ══ 2. 인사말 ══ -->
+<section id="greeting">
+  <div class="rv">
+    <span class="sec-en">Invitation</span>
+    <div class="thin-line"></div>
+    <div class="greet-hosts rv rv-d1" id="hosts"></div>
+    <p class="greet-body rv rv-d2" id="msg-body"></p>
+  </div>
+</section>
+
+<!-- ══ 3. 피처드 사진 ══ -->
+<section id="featured">
+  <div class="featured-ph" id="featured-ph">
+    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2" opacity=".5">
+      <rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/>
+    </svg>
+    <span>사진을 추가해주세요</span>
+  </div>
+</section>
+
+<!-- ══ 4. 웨딩 달력 ══ -->
+<section id="schedule">
+  <div class="rv">
+    <span class="sec-en">Date &amp; Time</span>
+    <div class="thin-line"></div>
+    <div class="big-date-num" id="big-date">12.20</div>
+    <div class="big-date-label" id="big-day">일요일</div>
+    <div class="big-date-time" id="big-time">오후 2시</div>
+  </div>
+  <div class="rv rv-d1">
+    <div class="cal" id="cal"></div>
+  </div>
+  <div class="rv rv-d2">
+    <div class="cntd" id="cntd">
+      <div class="cntd-c"><div class="cntd-v" id="cd">00</div><div class="cntd-l">DAYS</div></div>
+      <div class="cntd-c"><div class="cntd-v" id="ch">00</div><div class="cntd-l">HOURS</div></div>
+      <div class="cntd-c"><div class="cntd-v" id="cm">00</div><div class="cntd-l">MINS</div></div>
+      <div class="cntd-c"><div class="cntd-v" id="cs">00</div><div class="cntd-l">SECS</div></div>
+    </div>
+    <div style="text-align:center"><div class="dday-pill" id="dday">D - ???</div></div>
+  </div>
+</section>
+
+<!-- ══ 5. 신랑·신부 소개 ══ -->
+<section id="profile">
+  <div class="rv">
+    <span class="sec-en">Groom &amp; Bride</span>
+    <div class="thin-line"></div>
+  </div>
+  <div class="profile-grid">
+    <div class="profile-card rv rv-l">
+      <div class="profile-photo" id="groom-photo-wrap">
+        <div class="profile-photo-ph" id="groom-ph-placeholder">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
+          <span>신랑 사진</span>
+        </div>
+      </div>
+      <div class="profile-role">GROOM</div>
+      <div class="profile-name" id="g-name">신랑</div>
+      <a class="profile-call" id="g-call" href="#">
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.07 10.81 19.79 19.79 0 010 2.18 2 2 0 012 0h3a2 2 0 012 1.72 12.84 12.84 0 00.7 2.81 2 2 0 01-.45 2.11L6.09 7.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45 12.84 12.84 0 002.81.7A2 2 0 0122 16.92z"/></svg>
+        전화하기
+      </a>
+    </div>
+    <div class="profile-card rv rv-r rv-d1">
+      <div class="profile-photo" id="bride-photo-wrap">
+        <div class="profile-photo-ph" id="bride-ph-placeholder">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
+          <span>신부 사진</span>
+        </div>
+      </div>
+      <div class="profile-role">BRIDE</div>
+      <div class="profile-name" id="b-name">신부</div>
+      <a class="profile-call" id="b-call" href="#">
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.07 10.81 19.79 19.79 0 010 2.18 2 2 0 012 0h3a2 2 0 012 1.72 12.84 12.84 0 00.7 2.81 2 2 0 01-.45 2.11L6.09 7.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45 12.84 12.84 0 002.81.7A2 2 0 0122 16.92z"/></svg>
+        전화하기
+      </a>
+    </div>
+  </div>
+</section>
+
+<!-- ══ 6. 포토 갤러리 ══ -->
+<section id="gallery" style="display:none">
+  <div class="rv sec-pad">
+    <span class="sec-en">Gallery</span>
+    <div class="thin-line"></div>
+  </div>
+  <div class="gl-scroll" id="gl-scroll"></div>
+  <div class="gl-dots" id="gl-dots"></div>
+</section>
+
+<!-- ══ 8. 오시는 길 ══ -->
+<section id="location">
+  <div class="rv">
+    <span class="sec-en">Location</span>
+    <div class="thin-line"></div>
+    <div class="loc-name" id="loc-name"></div>
+    <div class="loc-hall" id="loc-hall"></div>
+    <div class="loc-addr" id="loc-addr"></div>
+    <div class="map-box">
+      <div class="map-ph" id="map-ph">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/><circle cx="12" cy="9" r="2.5"/></svg>
+        지도
+      </div>
+      <iframe id="map-frame" style="display:none" allowfullscreen loading="lazy"></iframe>
+    </div>
+    <div class="map-btns" id="map-btns"></div>
+    <div class="tp-list" id="tp-list"></div>
+  </div>
+</section>
+
+<!-- ══ 9. 계좌 ══ -->
+<section id="account">
+  <div class="rv">
+    <span class="sec-en">Gift</span>
+    <div class="thin-line"></div>
+    <p style="text-align:center;font-size:12px;color:#9bbdd0;margin-bottom:28px;line-height:2;letter-spacing:.3px">축하의 마음을 전해주시려는 분들을 위해<br>삼가 계좌번호를 안내드립니다.</p>
+    <div class="acc-tabs" id="acc-tabs"></div>
+    <div id="acc-pnls"></div>
+  </div>
+</section>
+
+<!-- ══ 11. RSVP ══ -->
+<section id="rsvp" style="display:none">
+  <div class="rv">
+    <span class="sec-en">RSVP</span>
+    <div class="thin-line"></div>
+    <div class="rsvp-box">
+      <p class="rsvp-desc">참석 여부를 미리 알려주시면<br>더욱 소중한 자리를 준비하겠습니다.</p>
+      <div class="rsvp-deadline" id="rsvp-deadline"></div>
+      <div class="rsvp-btns" id="rsvp-btns"></div>
+    </div>
+  </div>
+</section>
+
+<!-- ══ 푸터 ══ -->
+<footer>
+  <div class="rv">
+    <div class="ft-names" id="ft-names"></div>
+    <div class="ft-date" id="ft-date"></div>
+    <div class="ft-divider"></div>
+    <div class="ft-msg">소중한 걸음에 진심으로 감사드립니다.<br>두 사람이 행복하게 살겠습니다.</div>
+  </div>
+</footer>
+
+<script src="config.js"></script>
+<script>
+/* ── 편집기(editor.html) localStorage 오버라이드 적용 ── */
+;(()=>{
+  function deepMerge(t,s){for(const k in s){if(s[k]&&typeof s[k]==='object'&&!Array.isArray(s[k])){t[k]=t[k]||{};deepMerge(t[k],s[k]);}else t[k]=s[k];}}
+  try{
+    const ov=JSON.parse(localStorage.getItem('wc_data')||'{}');
+    deepMerge(WEDDING_CONFIG,ov);
+    const mp=localStorage.getItem('wc_img_main');if(mp)WEDDING_CONFIG.mainPhoto=mp;
+    const fp=localStorage.getItem('wc_img_featured');if(fp)WEDDING_CONFIG.featuredPhoto=fp;
+    const gp=localStorage.getItem('wc_img_groom');if(gp)WEDDING_CONFIG.groom.photo=gp;
+    const bp=localStorage.getItem('wc_img_bride');if(bp)WEDDING_CONFIG.bride.photo=bp;
+    const gl=JSON.parse(localStorage.getItem('wc_img_gallery')||'[]');if(gl.length)WEDDING_CONFIG.photos=gl;
+  }catch(e){}
+})();
+
+/* ── 테마 ── */
+;(()=>{
+  const t=WEDDING_CONFIG.theme,r=document.documentElement.style;
+  r.setProperty('--p',t.primary);r.setProperty('--s',t.secondary);
+  r.setProperty('--a',t.accent);r.setProperty('--t',t.text);
+  r.setProperty('--bg',t.background);
+  document.body.style.background=t.background;
+})();
+
+const C=WEDDING_CONFIG;
+const $=id=>document.getElementById(id);
+const pad=n=>String(n).padStart(2,'0');
+
+/* ── 진행바 ── */
+window.addEventListener('scroll',()=>{
+  const d=document.documentElement,s=d.scrollTop||document.body.scrollTop;
+  $('progress').style.width=(s/(d.scrollHeight-d.clientHeight)*100||0)+'%';
+});
+
+/* ── 눈 ── */
+;(()=>{
+  const cv=$('snow'),ctx=cv.getContext('2d');
+  const W=()=>Math.min(window.innerWidth,480),H=()=>window.innerHeight;
+  const sz=()=>{cv.width=W();cv.height=H();cv.style.width=W()+'px'};
+  sz();window.addEventListener('resize',sz);
+  const flakes=Array.from({length:55},()=>({x:Math.random()*480,y:Math.random()*H(),r:Math.random()*2.5+.7,v:Math.random()*.55+.22,dx:Math.random()*.28-.14,a:Math.random()*.45+.2,hex:Math.random()>.55}));
+  function hexDraw(x,y,r,a){ctx.save();ctx.globalAlpha=a;ctx.strokeStyle='#B2D8EC';ctx.lineWidth=.8;ctx.translate(x,y);for(let i=0;i<6;i++){ctx.rotate(Math.PI/3);ctx.beginPath();ctx.moveTo(0,0);ctx.lineTo(0,r*2.2);ctx.stroke();ctx.beginPath();ctx.moveTo(0,r);ctx.lineTo(r*.55,r*.5);ctx.stroke();ctx.beginPath();ctx.moveTo(0,r);ctx.lineTo(-r*.55,r*.5);ctx.stroke();}ctx.restore();}
+  function loop(){ctx.clearRect(0,0,W(),H());flakes.forEach(f=>{f.y+=f.v;f.x+=f.dx;if(f.y>H())f.y=-10,f.x=Math.random()*W();if(f.x>W())f.x=0;if(f.x<0)f.x=W();if(f.hex&&f.r>1.8)hexDraw(f.x,f.y,f.r,f.a);else{ctx.beginPath();ctx.arc(f.x,f.y,f.r,0,Math.PI*2);ctx.fillStyle=`rgba(178,216,236,${f.a})`;ctx.fill();}});requestAnimationFrame(loop);}
+  loop();
+})();
+
+/* ── 반짝이 ── */
+document.addEventListener('click',e=>{
+  const colors=['#C8E8F5','#B2D8EC','#9EC4D7','#fff','#DEF2FA'];
+  for(let i=0;i<8;i++){const sp=document.createElement('div');sp.className='sp';const s=Math.random()*7+3,tx=(Math.random()-.5)*64,ty=(Math.random()-.5)*64;sp.style.cssText=`left:${e.clientX}px;top:${e.clientY}px;width:${s}px;height:${s}px;background:${colors[i%5]};--tx:${tx}px;--ty:${ty}px;animation-delay:${i*.04}s`;document.body.appendChild(sp);setTimeout(()=>sp.remove(),700);}
+});
+
+/* ── 커버 ── */
+;(()=>{
+  $('cv-g').textContent=C.groom.name;
+  $('cv-b').textContent=C.bride.name;
+  $('cv-date').textContent=`${C.date.year} · ${pad(C.date.month)} · ${pad(C.date.day)}`;
+  $('cv-venue').textContent=C.venue.name;
+  document.title=`${C.groom.name} ♥ ${C.bride.name} 청첩장`;
+  const bg=$('cover-bg');
+  if(C.mainPhoto){const img=document.createElement('img');img.src=C.mainPhoto;img.alt='메인 사진';bg.appendChild(img);}
+})();
+
+/* ── 인사말 ── */
+$('hosts').innerHTML=`${C.groom.father} · ${C.groom.mother}의 아들 <strong>${C.groom.name}</strong><br>${C.bride.father} · ${C.bride.mother}의 딸 <strong>${C.bride.name}</strong>`;
+$('msg-body').textContent=C.message.invitation;
+
+/* ── 피처드 사진 ── */
+;(()=>{
+  const sec=$('featured');
+  if(C.featuredPhoto){
+    $('featured-ph').style.display='none';
+    const img=document.createElement('img');img.src=C.featuredPhoto;img.alt='';
+    sec.appendChild(img);
+  }
+})();
+
+/* ── 달력 ── */
+;(()=>{
+  const {year,month,day}=C.date;
+  const MO=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  const DOW=['일','월','화','수','목','금','토'];
+  const first=new Date(year,month-1,1).getDay(),last=new Date(year,month,0).getDate();
+  let h=`<div class="cal-hd"><div class="cal-hd-m">${MO[month-1]}</div><div class="cal-hd-y">${year}</div></div><div class="cal-bd"><div class="cal-dow">${DOW.map(d=>`<span>${d}</span>`).join('')}</div><div class="cal-days">`;
+  for(let i=0;i<first;i++)h+=`<div class="cal-d dim"></div>`;
+  for(let d=1;d<=last;d++)h+=`<div class="cal-d${d===day?' mark':''}">${d}</div>`;
+  h+=`</div></div>`;
+  $('cal').innerHTML=h;
+  // 날짜 표시
+  $('big-date').textContent=`${month}.${day}`;
+  $('big-day').textContent=C.date.dayOfWeek;
+  const h2=C.date.hour,ampm=h2<12?'오전':'오후',hh=h2%12||12;
+  $('big-time').textContent=`${ampm} ${hh}시${C.date.minute?` ${pad(C.date.minute)}분`:''}`;
+})();
+
+/* 카운트다운 */
+const wd=new Date(C.date.year,C.date.month-1,C.date.day,C.date.hour,C.date.minute);
+function tick(){
+  const diff=wd-new Date();
+  if(diff<=0){$('dday').textContent='♥ 오늘의 주인공';$('cntd').style.display='none';return;}
+  const d=Math.floor(diff/864e5),h=Math.floor(diff%864e5/36e5),m=Math.floor(diff%36e5/6e4),s=Math.floor(diff%6e4/1e3);
+  $('cd').textContent=pad(d);$('ch').textContent=pad(h);$('cm').textContent=pad(m);$('cs').textContent=pad(s);
+  $('dday').textContent=`D - ${d}`;
+}
+tick();setInterval(tick,1000);
+
+/* ── 신랑 신부 소개 ── */
+;(()=>{
+  function setProfile(cfg,nameId,callId,photoWrapId,phId){
+    $(nameId).textContent=cfg.name;
+    const callEl=$(callId);
+    if(cfg.phone){callEl.href='tel:'+cfg.phone.replace(/-/g,'');}
+    else callEl.style.display='none';
+    if(cfg.photo){
+      $(phId).style.display='none';
+      const img=document.createElement('img');img.src=cfg.photo;img.alt=cfg.name;
+      $(photoWrapId).appendChild(img);
+    }
+  }
+  setProfile(C.groom,'g-name','g-call','groom-photo-wrap','groom-ph-placeholder');
+  setProfile(C.bride,'b-name','b-call','bride-photo-wrap','bride-ph-placeholder');
+})();
+
+/* ── 갤러리 ── */
+;(()=>{
+  if(!C.photos||!C.photos.length)return;
+  $('gallery').style.display='block';
+  const wrap=$('gl-scroll'),dots=$('gl-dots');
+  C.photos.forEach((src,i)=>{
+    const item=document.createElement('div');item.className='gl-item';
+    const img=document.createElement('img');img.src=src;img.alt='사진 '+(i+1);img.loading='lazy';
+    item.appendChild(img);wrap.appendChild(item);
+    const dot=document.createElement('div');dot.className='gl-dot'+(i===0?' on':'');
+    dot.onclick=()=>wrap.scrollTo({left:i*(wrap.scrollWidth/C.photos.length),behavior:'smooth'});
+    dots.appendChild(dot);
+  });
+  wrap.addEventListener('scroll',()=>{
+    const idx=Math.round(wrap.scrollLeft/((wrap.scrollWidth-wrap.clientWidth)/(C.photos.length-1)));
+    document.querySelectorAll('.gl-dot').forEach((d,i)=>d.classList.toggle('on',i===idx));
+  });
+})();
+
+/* ── 오시는 길 ── */
+;(()=>{
+  const v=C.venue;
+  $('loc-name').textContent=v.name;
+  $('loc-hall').textContent=v.hall||'';
+  $('loc-addr').innerHTML=v.address+(v.addressDetail?`<br>${v.addressDetail}`:'');
+  if(v.mapUrl){const f=$('map-frame');f.src=v.mapUrl;f.style.display='block';$('map-ph').style.display='none';}
+  const mb=$('map-btns');
+  if(v.kakaoMapUrl){const a=document.createElement('a');a.className='map-btn';a.href=v.kakaoMapUrl;a.target='_blank';a.textContent='카카오맵';mb.appendChild(a);}
+  if(v.naverMapUrl){const a=document.createElement('a');a.className='map-btn';a.href=v.naverMapUrl;a.target='_blank';a.textContent='네이버지도';mb.appendChild(a);}
+  if(!v.kakaoMapUrl&&!v.naverMapUrl)mb.style.display='none';
+  const tp=$('tp-list');
+  [['🚇','지하철',v.subway],['🚌','버스',v.bus],['🚗','주차',v.parking]].forEach(([ic,lb,tx])=>{
+    if(!tx)return;
+    tp.innerHTML+=`<div class="tp-item"><div class="tp-ic">${ic}</div><div class="tp-txt"><span class="tp-lbl">${lb}</span>${tx}</div></div>`;
+  });
+})();
+
+/* ── 계좌 ── */
+;(()=>{
+  if(!C.accounts||!C.accounts.length)return;
+  const tabs=$('acc-tabs'),pnls=$('acc-pnls');
+  const sides=[
+    {label:'신랑측',items:C.accounts.filter((_,i)=>i===0||(i>=2&&i%2===0)).slice(0,2)},
+    {label:'신부측',items:C.accounts.filter((_,i)=>i===1||(i>=2&&i%2===1)).slice(0,2)},
+  ];
+  sides.forEach((side,idx)=>{
+    if(!side.items.length)return;
+    const tab=document.createElement('div');tab.className='acc-tab'+(idx===0?' on':'');tab.textContent=side.label;
+    const pnl=document.createElement('div');pnl.className='acc-pnl'+(idx===0?' on':'');
+    tab.onclick=()=>{document.querySelectorAll('.acc-tab').forEach(t=>t.classList.remove('on'));document.querySelectorAll('.acc-pnl').forEach(p=>p.classList.remove('on'));tab.classList.add('on');pnl.classList.add('on');};
+    tabs.appendChild(tab);
+    side.items.forEach(acc=>{const id='a'+Math.random().toString(36).slice(2);pnl.innerHTML+=`<div class="acc-item"><div class="acc-info"><div class="acc-owner">${acc.owner}</div><div class="acc-bank">${acc.bank}</div><div class="acc-num">${acc.number}</div></div><button class="cp-btn" id="${id}" onclick="copyAcc('${acc.number}','${id}')">복사</button></div>`;});
+    pnls.appendChild(pnl);
+  });
+})();
+
+window.copyAcc=function(num,id){navigator.clipboard.writeText(num.replace(/-/g,'')).then(()=>{const b=$(id);b.textContent='✓ 완료';b.classList.add('done');toast('계좌번호가 복사되었습니다.');setTimeout(()=>{b.textContent='복사';b.classList.remove('done');},2000);});};
+
+/* ── RSVP ── */
+;(()=>{
+  const r=C.rsvp;
+  if(!r||!r.enabled)return;
+  $('rsvp').style.display='block';
+  if(r.deadline)$('rsvp-deadline').textContent='회신 마감 · '+r.deadline;
+  const btns=$('rsvp-btns');
+  if(r.formUrl){const a=document.createElement('a');a.className='rsvp-btn rsvp-btn-main';a.href=r.formUrl;a.target='_blank';a.innerHTML='<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>참석 여부 알리기';btns.appendChild(a);}
+  if(r.kakaoUrl){const a=document.createElement('a');a.className='rsvp-btn rsvp-btn-sub';a.href=r.kakaoUrl;a.target='_blank';a.textContent='카카오톡으로 알리기';btns.appendChild(a);}
+  if(!r.formUrl&&!r.kakaoUrl){const el=document.createElement('p');el.style.cssText='font-size:12px;color:#9bbdd0;text-align:center;margin-top:8px';el.textContent='신랑·신부에게 직접 연락해 주세요.';btns.parentNode.appendChild(el);}
+})();
+
+/* ── 푸터 ── */
+$('ft-names').textContent=`${C.groom.name}  ♥  ${C.bride.name}`;
+$('ft-date').textContent=`${C.date.year} · ${pad(C.date.month)} · ${pad(C.date.day)}`;
+
+/* ── BGM ── */
+;(()=>{
+  const b=C.bgMusic;if(!b||!b.enabled||!b.src)return;
+  const el=$('bgm'),audio=$('bgm-audio');
+  audio.src=b.src;if(b.title)$('bgm-lbl').textContent='♪ '+b.title;
+  el.style.display='flex';
+  document.addEventListener('click',function s(){
+    audio.play().then(()=>{$('bgm-disc').classList.add('spin');$('bgm-play').style.display='none';$('bgm-pause').style.display='block';}).catch(()=>{});
+    document.removeEventListener('click',s);
+  },{once:true});
+})();
+
+window.toggleBgm=function(){
+  const a=$('bgm-audio'),d=$('bgm-disc');
+  if(a.paused){a.play();d.classList.add('spin');$('bgm-play').style.display='none';$('bgm-pause').style.display='block';}
+  else{a.pause();d.classList.remove('spin');$('bgm-play').style.display='block';$('bgm-pause').style.display='none';}
+};
+
+/* ── 토스트 ── */
+window.toast=function(msg){const el=$('toast');el.textContent=msg;el.classList.add('show');setTimeout(()=>el.classList.remove('show'),2200);};
+
+/* ── Reveal 스크롤 ── */
+const obs=new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting)e.target.classList.add('in');}),{threshold:.08});
+document.querySelectorAll('.rv,.rv-l,.rv-r').forEach(el=>obs.observe(el));
+</script>
+</body>
+</html>
