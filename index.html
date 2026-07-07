@@ -71,53 +71,15 @@
     #toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
 
     /* ══════════════════════════════
-       1. 커버 (메인 사진)
+       1. 커버 이미지
     ══════════════════════════════ */
-    #cover{
-      height:100svh;min-height:600px;
-      display:flex;flex-direction:column;
-      align-items:center;justify-content:flex-end;
-      padding-bottom:72px;
-      position:relative;overflow:hidden;
+    #cover{position:relative;width:100%;background:var(--p2)}
+    #cover-img{width:100%;display:block}
+    .cover-ph{
+      display:flex;flex-direction:column;align-items:center;justify-content:center;
+      gap:12px;height:480px;
+      color:rgba(0,0,0,.3);font-family:var(--kr);font-size:13px;letter-spacing:1px;
     }
-    .cover-bg{
-      position:absolute;inset:0;
-      background:linear-gradient(160deg,var(--p1) 0%,var(--p2) 25%,var(--p3) 50%,var(--p4) 75%,var(--p5) 100%);
-    }
-    .cover-bg img{width:100%;height:100%;object-fit:cover;display:block}
-    .cover-overlay{position:absolute;inset:0;background:linear-gradient(to top,rgba(0,0,0,.45) 0%,rgba(0,0,0,.1) 50%,transparent 100%)}
-
-    /* 커버 태그라인 */
-    .cv-tagline{
-      position:absolute;top:52px;left:0;right:0;z-index:2;
-      text-align:center;
-      font-family:var(--script);font-size:22px;
-      color:#fff;font-weight:400;
-      opacity:0;animation:fadeIn .9s .2s forwards;
-    }
-
-    /* 커버 본문 */
-    .cover-content{position:relative;z-index:2;text-align:center;width:100%;padding:0 28px}
-    .cv-names{
-      font-family:var(--kr);font-size:30px;font-weight:700;
-      color:#fff;letter-spacing:10px;line-height:1.2;
-      opacity:0;animation:fadeUp .9s .4s forwards;
-    }
-    .cv-sep{font-size:20px;letter-spacing:0;margin:0 8px;font-weight:400;opacity:.7}
-    .cv-date{
-      margin-top:18px;font-family:var(--kr);font-size:12px;
-      letter-spacing:4px;color:rgba(255,255,255,.85);font-weight:400;
-      opacity:0;animation:fadeUp .9s .7s forwards;
-    }
-    .cv-venue{
-      margin-top:6px;font-family:var(--kr);font-size:11px;
-      letter-spacing:2px;color:rgba(255,255,255,.65);font-weight:400;
-      opacity:0;animation:fadeUp .9s .9s forwards;
-    }
-
-    .cv-scroll{position:absolute;bottom:24px;left:50%;transform:translateX(-50%);z-index:3;display:flex;flex-direction:column;align-items:center;gap:5px;opacity:0;animation:fadeIn 1s 1.5s forwards}
-    .cv-scroll-line{width:1px;height:32px;background:linear-gradient(to bottom,rgba(255,255,255,0),rgba(255,255,255,.6),rgba(255,255,255,0));animation:scrollPulse 2s ease-in-out infinite}
-    .cv-scroll-txt{font-size:8px;letter-spacing:3px;color:rgba(255,255,255,.45)}
 
     /* ══════════════════════════════
        2. 인사말
@@ -347,23 +309,13 @@
 </div>
 <div id="toast"></div>
 
-<!-- ══ 1. 커버 (메인 사진) ══ -->
+<!-- ══ 1. 커버 이미지 ══ -->
 <section id="cover">
-  <div class="cover-bg" id="cover-bg"></div>
-  <div class="cover-overlay"></div>
-  <div class="cv-tagline">lovebirds tie the knot!</div>
-  <div class="cover-content">
-    <div class="cv-names">
-      <span id="cv-g">신랑</span>
-      <span class="cv-sep">│</span>
-      <span id="cv-b">신부</span>
-    </div>
-    <div class="cv-date" id="cv-date">0000 · 00 · 00</div>
-    <div class="cv-venue" id="cv-venue">웨딩홀</div>
-  </div>
-  <div class="cv-scroll">
-    <div class="cv-scroll-line"></div>
-    <div class="cv-scroll-txt">SCROLL</div>
+  <div class="cover-ph" id="cover-ph">
+    <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2" opacity=".4">
+      <rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/>
+    </svg>
+    <span>커버 이미지를 추가해주세요</span>
   </div>
 </section>
 
@@ -612,13 +564,13 @@ document.addEventListener('click',e=>{
 
 /* ── 커버 ── */
 ;(()=>{
-  $('cv-g').textContent=C.groom.name;
-  $('cv-b').textContent=C.bride.name;
-  $('cv-date').textContent=`${C.date.year} · ${pad(C.date.month)} · ${pad(C.date.day)}`;
-  $('cv-venue').textContent=C.venue.name;
   document.title=`${C.groom.name} ♥ ${C.bride.name} 청첩장`;
-  const bg=$('cover-bg');
-  if(C.mainPhoto){const img=document.createElement('img');img.src=C.mainPhoto;img.alt='메인 사진';bg.appendChild(img);}
+  if(C.mainPhoto){
+    $('cover-ph').style.display='none';
+    const img=document.createElement('img');
+    img.id='cover-img';img.src=C.mainPhoto;img.alt='커버 이미지';
+    $('cover').appendChild(img);
+  }
 })();
 
 /* ── 인사말 ── */

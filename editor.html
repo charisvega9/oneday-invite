@@ -374,11 +374,12 @@
 <!-- ══ 사진 ══ -->
 <div id="pane-photos" class="pane">
   <div class="sec">
-    <div class="sec-hd">메인 사진 (커버 전체 배경)</div>
+    <div class="sec-hd">커버 이미지</div>
+    <div class="field-hint" style="margin-bottom:8px">첫 화면에 표시되는 이미지입니다. 텍스트 없이 이미지 그대로 출력됩니다.</div>
     <div class="photo-zone" id="pz-main">
       <input type="file" accept="image/*" onchange="uploadPhoto('main',this)"/>
-      <div class="pz-icon">📷</div>
-      <div class="pz-txt">클릭하거나 사진을 드래그해서 업로드</div>
+      <div class="pz-icon">🖼️</div>
+      <div class="pz-txt">클릭하거나 이미지를 드래그해서 업로드</div>
     </div>
   </div>
   <div class="sec">
@@ -769,7 +770,7 @@ function populate(){
 
 /* ── 사진 ── */
 const PZ_DEF={
-  main:{icon:'📷',txt:'클릭하거나 사진을 드래그해서 업로드'},
+  main:{icon:'🖼️',txt:'클릭하거나 이미지를 드래그해서 업로드'},
   featured:{icon:'📷',txt:'클릭하거나 사진을 드래그해서 업로드'},
   groom:{icon:'🤵',txt:'업로드'},
   bride:{icon:'👰',txt:'업로드'},
