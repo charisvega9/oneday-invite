@@ -4,8 +4,12 @@
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1"/>
   <title>청첩장</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com"/>
-  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@200;300;400;500;700&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300;1,400&display=swap" rel="stylesheet"/>
+  <style>
+    @font-face{font-family:'Playball';src:url('fonts/Playball.ttf') format('truetype');font-weight:400;font-style:normal;font-display:swap}
+    @font-face{font-family:'NanumMyeongjo';src:url('fonts/NanumMyeongjo.ttf') format('truetype');font-weight:400;font-style:normal;font-display:swap}
+    @font-face{font-family:'NanumMyeongjo';src:url('fonts/NanumMyeongjoBold.ttf') format('truetype');font-weight:700;font-style:normal;font-display:swap}
+    @font-face{font-family:'NanumMyeongjo';src:url('fonts/NanumMyeongjoExtraBold.ttf') format('truetype');font-weight:900;font-style:normal;font-display:swap}
+  </style>
   <script>
   (()=>{
     function hsl2hex(h,s,l){
@@ -41,8 +45,8 @@
   </script>
   <style>
     :root{
-      --serif:'DM Sans','Noto Sans KR',sans-serif;
-      --kr:'Noto Sans KR',sans-serif;
+      --script:'Playball',serif;
+      --kr:'NanumMyeongjo','serif';
     }
     *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
     html{scroll-behavior:smooth}
@@ -70,10 +74,10 @@
        1. 커버 (메인 사진)
     ══════════════════════════════ */
     #cover{
-      height:100svh;min-height:580px;
+      height:100svh;min-height:600px;
       display:flex;flex-direction:column;
       align-items:center;justify-content:flex-end;
-      padding-bottom:64px;
+      padding-bottom:72px;
       position:relative;overflow:hidden;
     }
     .cover-bg{
@@ -81,20 +85,35 @@
       background:linear-gradient(160deg,var(--p1) 0%,var(--p2) 25%,var(--p3) 50%,var(--p4) 75%,var(--p5) 100%);
     }
     .cover-bg img{width:100%;height:100%;object-fit:cover;display:block}
-    .cover-overlay{position:absolute;inset:0;background:linear-gradient(to top,rgba(255,255,255,.55) 0%,rgba(255,255,255,.12) 55%,transparent 100%)}
+    .cover-overlay{position:absolute;inset:0;background:linear-gradient(to top,rgba(0,0,0,.45) 0%,rgba(0,0,0,.1) 50%,transparent 100%)}
 
-    .cover-card{
-      position:relative;z-index:2;text-align:center;
-      background:rgba(255,255,255,.14);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
-      border:1px solid rgba(255,255,255,.3);border-radius:2px;
-      padding:36px 44px 32px;width:calc(100% - 40px);max-width:360px;
+    /* 커버 태그라인 */
+    .cv-tagline{
+      position:absolute;top:52px;left:0;right:0;z-index:2;
+      text-align:center;
+      font-family:var(--script);font-size:22px;
+      color:#fff;font-weight:400;
+      opacity:0;animation:fadeIn .9s .2s forwards;
     }
-    .cover-card *{color:#fff;font-weight:700}
-    .cv-en{font-family:var(--serif);font-style:italic;font-size:10px;letter-spacing:5px;margin-bottom:22px}
-    .cv-names{font-family:var(--serif);font-size:36px;letter-spacing:5px;line-height:1;opacity:0;animation:fadeUp .9s .3s forwards}
-    .cv-amp{display:block;font-style:italic;font-size:20px;margin:5px 0;letter-spacing:2px}
-    .cv-date{margin-top:22px;font-size:11px;letter-spacing:4px;opacity:0;animation:fadeUp .9s .6s forwards}
-    .cv-venue{margin-top:6px;font-size:10px;letter-spacing:2px;opacity:0;animation:fadeUp .9s .8s forwards}
+
+    /* 커버 본문 */
+    .cover-content{position:relative;z-index:2;text-align:center;width:100%;padding:0 28px}
+    .cv-names{
+      font-family:var(--kr);font-size:30px;font-weight:700;
+      color:#fff;letter-spacing:10px;line-height:1.2;
+      opacity:0;animation:fadeUp .9s .4s forwards;
+    }
+    .cv-sep{font-size:20px;letter-spacing:0;margin:0 8px;font-weight:400;opacity:.7}
+    .cv-date{
+      margin-top:18px;font-family:var(--kr);font-size:12px;
+      letter-spacing:4px;color:rgba(255,255,255,.85);font-weight:400;
+      opacity:0;animation:fadeUp .9s .7s forwards;
+    }
+    .cv-venue{
+      margin-top:6px;font-family:var(--kr);font-size:11px;
+      letter-spacing:2px;color:rgba(255,255,255,.65);font-weight:400;
+      opacity:0;animation:fadeUp .9s .9s forwards;
+    }
 
     .cv-scroll{position:absolute;bottom:24px;left:50%;transform:translateX(-50%);z-index:3;display:flex;flex-direction:column;align-items:center;gap:5px;opacity:0;animation:fadeIn 1s 1.5s forwards}
     .cv-scroll-line{width:1px;height:32px;background:linear-gradient(to bottom,rgba(255,255,255,0),rgba(255,255,255,.6),rgba(255,255,255,0));animation:scrollPulse 2s ease-in-out infinite}
@@ -104,8 +123,8 @@
        2. 인사말
     ══════════════════════════════ */
     #greeting{padding:72px 28px;background:#fff}
-    .greet-hosts{text-align:center;font-size:13px;line-height:2.4;color:#000;margin-bottom:28px}
-    .greet-body{text-align:center;font-size:14px;line-height:2.5;color:#000;white-space:pre-line;letter-spacing:.3px}
+    .greet-hosts{font-family:var(--kr);text-align:center;font-size:13px;line-height:2.4;color:#000;margin-bottom:28px}
+    .greet-body{font-family:var(--kr);text-align:center;font-size:14px;line-height:2.8;color:#000;white-space:pre-line;letter-spacing:.5px}
 
     /* ══════════════════════════════
        3. 피처드 사진
@@ -122,14 +141,14 @@
        4. 웨딩 달력
     ══════════════════════════════ */
     #schedule{padding:72px 28px;background:linear-gradient(180deg,#fff 0%,var(--p1) 60%,var(--p2) 100%);text-align:center}
-    .big-date-num{font-family:var(--serif);font-size:80px;font-weight:300;color:#000;letter-spacing:-3px;line-height:1}
-    .big-date-label{font-size:11px;letter-spacing:5px;color:#000;margin:6px 0 3px}
-    .big-date-time{font-size:13px;letter-spacing:3px;color:#000}
+    .big-date-num{font-family:var(--kr);font-size:88px;font-weight:400;color:#000;letter-spacing:-2px;line-height:1}
+    .big-date-label{font-family:var(--kr);font-size:13px;letter-spacing:4px;color:#000;margin:10px 0 4px}
+    .big-date-time{font-family:var(--kr);font-size:13px;letter-spacing:3px;color:#000}
 
     /* 캘린더 */
     .cal{margin:36px auto 0;max-width:290px;border:1px solid var(--p3);border-radius:4px;overflow:hidden}
-    .cal-hd{background:linear-gradient(105deg,var(--p3),var(--p5));color:#fff;font-weight:700;padding:13px 16px;display:flex;justify-content:space-between;align-items:center}
-    .cal-hd-m{font-family:var(--serif);font-style:italic;font-size:15px;letter-spacing:2px}
+    .cal-hd{background:linear-gradient(105deg,var(--p3),var(--p5));color:#fff;font-weight:700;padding:11px 16px;display:flex;justify-content:space-between;align-items:center}
+    .cal-hd-m{font-family:var(--script);font-size:18px;letter-spacing:1px}
     .cal-hd-y{font-size:11px;letter-spacing:3px;opacity:.8}
     .cal-bd{padding:14px}
     .cal-dow{display:grid;grid-template-columns:repeat(7,1fr);text-align:center;margin-bottom:6px}
@@ -145,9 +164,9 @@
     .cntd{display:flex;margin-top:32px;border:1px solid var(--p3);border-radius:4px;overflow:hidden;background:linear-gradient(180deg,#fff,var(--p1))}
     .cntd-c{flex:1;padding:18px 4px 14px;text-align:center;border-right:1px solid var(--p3)}
     .cntd-c:last-child{border-right:none}
-    .cntd-v{font-family:var(--serif);font-size:38px;font-weight:300;color:#000;line-height:1}
-    .cntd-l{font-size:9px;letter-spacing:2px;color:#000;margin-top:5px}
-    .dday-pill{display:inline-block;font-family:var(--serif);font-style:italic;font-size:13px;letter-spacing:2px;color:#000;border:1px solid var(--p4);padding:4px 20px;border-radius:20px;margin-top:18px;background:linear-gradient(105deg,var(--p1),var(--p2))}
+    .cntd-v{font-family:var(--kr);font-size:36px;font-weight:400;color:#000;line-height:1}
+    .cntd-l{font-family:var(--kr);font-size:9px;letter-spacing:2px;color:#000;margin-top:5px}
+    .dday-pill{display:inline-block;font-family:var(--script);font-size:16px;letter-spacing:1px;color:#000;border:1px solid var(--p4);padding:5px 24px;border-radius:20px;margin-top:18px;background:linear-gradient(105deg,var(--p1),var(--p2))}
 
     /* ══════════════════════════════
        5. 신랑 신부 소개
@@ -163,12 +182,12 @@
     }
     .profile-photo img{width:100%;height:100%;object-fit:cover;display:block}
     .profile-photo-ph{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:color-mix(in srgb,var(--t) 40%,transparent);font-size:11px;letter-spacing:1px;flex-direction:column;gap:6px}
-    .profile-role{font-size:10px;letter-spacing:3px;color:#000;margin-bottom:6px}
-    .profile-name{font-size:20px;font-weight:400;letter-spacing:3px;color:#000;margin-bottom:8px}
-    .profile-family{font-size:11px;color:#000;line-height:2;letter-spacing:.5px;margin-bottom:12px}
-    .profile-intro{font-size:12px;color:#000;line-height:1.9;letter-spacing:.3px;word-break:keep-all}
-    .profile-call{display:inline-flex;align-items:center;gap:4px;margin-top:12px;padding:7px 14px;background:linear-gradient(105deg,var(--p2),var(--p3));color:#000;border-radius:2px;font-size:11px;text-decoration:none;letter-spacing:1px;transition:all .2s}
-    .profile-call:hover{background:linear-gradient(105deg,var(--p3),var(--p5));color:#fff}
+    .profile-role{font-family:var(--script);font-size:14px;letter-spacing:1px;color:#000;margin-bottom:6px}
+    .profile-name{font-family:var(--kr);font-size:20px;font-weight:700;letter-spacing:6px;color:#000;margin-bottom:8px}
+    .profile-family{font-family:var(--kr);font-size:11px;color:#000;line-height:2.2;letter-spacing:.5px;margin-bottom:12px}
+    .profile-intro{font-family:var(--kr);font-size:12px;color:#000;line-height:1.9;letter-spacing:.3px;word-break:keep-all}
+    .profile-call{display:inline-flex;align-items:center;gap:5px;margin-top:12px;padding:8px 18px;background:var(--p1);border:1px solid var(--p4);color:#000;border-radius:2px;font-family:var(--kr);font-size:11px;text-decoration:none;letter-spacing:1px;transition:all .2s}
+    .profile-call:hover{background:var(--p5);border-color:var(--p5);color:#fff}
 
     /* ══════════════════════════════
        6. 타임라인
@@ -180,7 +199,7 @@
     .tl-item:last-child{padding-bottom:0}
     .tl-dot{position:absolute;left:-5px;top:5px;width:11px;height:11px;border-radius:50%;border:2px solid var(--p3);background:#fff;transition:all .4s}
     .tl-item.in .tl-dot{background:linear-gradient(135deg,var(--p3),var(--p5));border-color:var(--p5)}
-    .tl-date{font-family:var(--serif);font-style:italic;font-size:12px;letter-spacing:2px;color:#000;margin-bottom:5px}
+    .tl-date{font-family:var(--script);font-size:14px;letter-spacing:1px;color:#000;margin-bottom:5px}
     .tl-title{font-size:15px;font-weight:400;letter-spacing:1px;color:#000;margin-bottom:5px}
     .tl-desc{font-size:13px;color:#000;line-height:1.9;letter-spacing:.3px;word-break:keep-all}
 
@@ -205,7 +224,7 @@
     .gl-item.active{transform:scale(1.03);box-shadow:0 14px 40px rgba(0,0,0,.16),0 4px 12px rgba(0,0,0,.08)}
     .gl-item img{width:100%;height:100%;object-fit:cover;display:block}
     .gl-footer{display:flex;align-items:center;justify-content:center;gap:16px;padding:18px 0 0}
-    .gl-counter{font-family:var(--serif);font-style:italic;font-size:12px;letter-spacing:3px;color:#000}
+    .gl-counter{font-family:var(--script);font-size:16px;letter-spacing:2px;color:#000}
     .gl-lines{display:flex;gap:5px;align-items:center}
     .gl-line{width:18px;height:1px;background:var(--p3);transition:all .35s;cursor:pointer}
     .gl-line.on{width:36px;background:var(--p5)}
@@ -274,16 +293,17 @@
     /* ══════════════════════════════
        섹션 공통 헤더
     ══════════════════════════════ */
-    .sec-en{font-family:var(--serif);font-style:italic;font-size:11px;letter-spacing:5px;color:#000;text-align:center;display:block;margin-bottom:10px}
-    .sec-kr{font-size:18px;font-weight:400;letter-spacing:3px;text-align:center;color:#000;margin-bottom:36px}
-    .thin-line{width:32px;height:1px;background:var(--p);margin:12px auto 28px}
+    .sec-en{font-family:var(--script);font-size:26px;letter-spacing:1px;color:#000;text-align:center;display:block;margin-bottom:6px;font-weight:400;line-height:1.2}
+    .sec-kr{font-family:var(--kr);font-size:16px;font-weight:400;letter-spacing:3px;text-align:center;color:#000;margin-bottom:32px}
+    .thin-line{width:28px;height:1px;background:var(--p5);margin:10px auto 28px}
 
     /* ── 푸터 ── */
-    footer{text-align:center;padding:60px 28px 80px;background:var(--t)}
-    .ft-names{font-family:var(--serif);font-weight:300;font-size:24px;letter-spacing:7px;color:rgba(255,255,255,.85);margin-bottom:10px}
-    .ft-date{font-size:11px;letter-spacing:3px;color:rgba(255,255,255,.3);margin-bottom:32px}
-    .ft-divider{width:24px;height:1px;background:rgba(255,255,255,.15);margin:0 auto 24px}
-    .ft-msg{font-size:12px;line-height:2.3;letter-spacing:.5px;color:rgba(255,255,255,.35)}
+    footer{text-align:center;padding:64px 28px 88px;background:var(--p5)}
+    .ft-names{font-family:var(--script);font-size:32px;letter-spacing:2px;color:#fff;font-weight:400;margin-bottom:8px}
+    .ft-heart{color:#fff;font-size:18px;display:inline-block;margin:0 8px;vertical-align:middle}
+    .ft-date{font-family:var(--kr);font-size:12px;letter-spacing:3px;color:rgba(255,255,255,.6);margin-bottom:32px}
+    .ft-divider{width:24px;height:1px;background:rgba(255,255,255,.25);margin:0 auto 24px}
+    .ft-msg{font-family:var(--kr);font-size:12px;line-height:2.4;letter-spacing:.5px;color:rgba(255,255,255,.55)}
 
     /* ── 애니메이션 ── */
     @keyframes fadeUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:none}}
@@ -329,15 +349,13 @@
 
 <!-- ══ 1. 커버 (메인 사진) ══ -->
 <section id="cover">
-  <div class="cover-bg" id="cover-bg">
-    <!-- 사진 또는 그라디언트 배경 -->
-  </div>
+  <div class="cover-bg" id="cover-bg"></div>
   <div class="cover-overlay"></div>
-  <div class="cover-card">
-    <div class="cv-en">WINTER WEDDING INVITATION</div>
+  <div class="cv-tagline">lovebirds tie the knot!</div>
+  <div class="cover-content">
     <div class="cv-names">
       <span id="cv-g">신랑</span>
-      <span class="cv-amp">&amp;</span>
+      <span class="cv-sep">│</span>
       <span id="cv-b">신부</span>
     </div>
     <div class="cv-date" id="cv-date">0000 · 00 · 00</div>
@@ -470,7 +488,7 @@
   <div class="rv">
     <span class="sec-en">Gift</span>
     <div class="thin-line"></div>
-    <p style="text-align:center;font-size:12px;color:var(--p4);margin-bottom:28px;line-height:2;letter-spacing:.3px">축하의 마음을 전해주시려는 분들을 위해<br>삼가 계좌번호를 안내드립니다.</p>
+    <p style="text-align:center;font-family:'NanumMyeongjo',serif;font-size:12px;color:#000;margin-bottom:28px;line-height:2.2;letter-spacing:.3px">축하의 마음을 전해주시려는 분들을 위해<br>삼가 계좌번호를 안내드립니다.</p>
     <div class="acc-tabs" id="acc-tabs"></div>
     <div id="acc-pnls"></div>
   </div>
@@ -492,7 +510,9 @@
 <!-- ══ 푸터 ══ -->
 <footer>
   <div class="rv">
-    <div class="ft-names" id="ft-names"></div>
+    <div class="ft-names">
+      <span id="ft-g"></span><span class="ft-heart">♥</span><span id="ft-b"></span>
+    </div>
     <div class="ft-date" id="ft-date"></div>
     <div class="ft-divider"></div>
     <div class="ft-msg">소중한 걸음에 진심으로 감사드립니다.<br>두 사람이 행복하게 살겠습니다.</div>
@@ -743,7 +763,8 @@ window.copyAcc=function(num,id){navigator.clipboard.writeText(num.replace(/-/g,'
 })();
 
 /* ── 푸터 ── */
-$('ft-names').textContent=`${C.groom.name}  ♥  ${C.bride.name}`;
+$('ft-g').textContent=C.groom.name;
+$('ft-b').textContent=C.bride.name;
 $('ft-date').textContent=`${C.date.year} · ${pad(C.date.month)} · ${pad(C.date.day)}`;
 
 /* ── BGM ── */
