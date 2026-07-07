@@ -215,6 +215,17 @@
     .theme-preview{margin-top:20px;border-radius:10px;overflow:hidden;border:1px solid var(--border)}
     .theme-preview-bar{height:8px}
 
+    /* ── 로딩 ── */
+    #loading-overlay{
+      position:fixed;inset:0;background:var(--white);z-index:9000;
+      display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;
+    }
+    #loading-overlay.hide{display:none}
+    .loading-bar-track{width:200px;height:4px;background:var(--border);border-radius:2px;overflow:hidden}
+    .loading-bar-fill{height:100%;width:0%;background:var(--blue);border-radius:2px;animation:loading-anim 1.2s ease-in-out infinite}
+    @keyframes loading-anim{0%{width:0%;margin-left:0}50%{width:60%}100%{width:0%;margin-left:100%}}
+    .loading-txt{font-size:13px;color:var(--text2)}
+
     /* ── 토스트 ── */
     #toast{
       position:fixed;bottom:24px;left:50%;
@@ -234,6 +245,11 @@
   </style>
 </head>
 <body>
+
+<div id="loading-overlay">
+  <div class="loading-bar-track"><div class="loading-bar-fill"></div></div>
+  <div class="loading-txt">☁️ 데이터 불러오는 중...</div>
+</div>
 
 <header class="topbar">
   <div class="topbar-title">✏️ 청첩장 편집기</div>
@@ -962,6 +978,7 @@ const DEFAULT_GS_URL='https://script.google.com/macros/s/AKfycbyDklnloqFKVfcKsAB
     }
   }catch(e){}
   populate();
+  $('loading-overlay').classList.add('hide');
 })();
 </script>
 </body>
