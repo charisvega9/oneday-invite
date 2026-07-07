@@ -56,7 +56,7 @@
     }
     .cover-bg{
       position:absolute;inset:0;
-      background:linear-gradient(160deg,#F2FAFD 0%,#DEF2FA 25%,#C8E8F5 50%,#B2D8EC 75%,#9EC4D7 100%);
+      background:linear-gradient(160deg,var(--p1) 0%,var(--p2) 25%,var(--p3) 50%,var(--p4) 75%,var(--p5) 100%);
     }
     .cover-bg img{width:100%;height:100%;object-fit:cover;display:block}
     .cover-overlay{position:absolute;inset:0;background:linear-gradient(to top,rgba(158,196,215,.45) 0%,rgba(178,216,236,.08) 55%,transparent 100%)}
@@ -81,24 +81,24 @@
        2. 인사말
     ══════════════════════════════ */
     #greeting{padding:72px 28px;background:#fff}
-    .greet-hosts{text-align:center;font-size:13px;line-height:2.4;color:#6a90a8;margin-bottom:28px}
+    .greet-hosts{text-align:center;font-size:13px;line-height:2.4;color:var(--p4);margin-bottom:28px}
     .greet-body{text-align:center;font-size:14px;line-height:2.5;color:var(--t);white-space:pre-line;letter-spacing:.3px}
 
     /* ══════════════════════════════
        3. 피처드 사진
     ══════════════════════════════ */
-    #featured{position:relative;overflow:hidden;background:#d4e8f4}
+    #featured{position:relative;overflow:hidden;background:var(--p3)}
     #featured img{width:100%;display:block;max-height:560px;object-fit:cover}
     .featured-ph{
       height:420px;display:flex;align-items:center;justify-content:center;
-      background:linear-gradient(135deg,#F2FAFD 0%,#C8E8F5 50%,#9EC4D7 100%);
+      background:linear-gradient(135deg,var(--p1) 0%,var(--p3) 50%,var(--p5) 100%);
       color:rgba(26,53,69,.45);font-size:13px;letter-spacing:2px;flex-direction:column;gap:10px;
     }
 
     /* ══════════════════════════════
        4. 웨딩 달력
     ══════════════════════════════ */
-    #schedule{padding:72px 28px;background:linear-gradient(180deg,#fff 0%,#F2FAFD 60%,#DEF2FA 100%);text-align:center}
+    #schedule{padding:72px 28px;background:linear-gradient(180deg,#fff 0%,var(--p1) 60%,var(--p2) 100%);text-align:center}
     .big-date-num{font-family:var(--serif);font-size:80px;font-weight:300;color:var(--t);letter-spacing:-3px;line-height:1}
     .big-date-label{font-size:11px;letter-spacing:5px;color:var(--p5);margin:6px 0 3px}
     .big-date-time{font-size:13px;letter-spacing:3px;color:var(--p4)}
@@ -118,23 +118,23 @@
     .cal-d.dim{color:var(--p2)}
 
     /* 카운트다운 */
-    .cntd{display:flex;margin-top:32px;border:1px solid var(--p3);border-radius:4px;overflow:hidden;background:linear-gradient(180deg,#fff,#F2FAFD)}
+    .cntd{display:flex;margin-top:32px;border:1px solid var(--p3);border-radius:4px;overflow:hidden;background:linear-gradient(180deg,#fff,var(--p1))}
     .cntd-c{flex:1;padding:18px 4px 14px;text-align:center;border-right:1px solid var(--p3)}
     .cntd-c:last-child{border-right:none}
     .cntd-v{font-family:var(--serif);font-size:38px;font-weight:300;color:var(--p5);line-height:1}
     .cntd-l{font-size:9px;letter-spacing:2px;color:var(--p4);margin-top:5px}
-    .dday-pill{display:inline-block;font-family:var(--serif);font-style:italic;font-size:13px;letter-spacing:2px;color:var(--p5);border:1px solid var(--p4);padding:4px 20px;border-radius:20px;margin-top:18px;background:linear-gradient(105deg,#F2FAFD,#DEF2FA)}
+    .dday-pill{display:inline-block;font-family:var(--serif);font-style:italic;font-size:13px;letter-spacing:2px;color:var(--p5);border:1px solid var(--p4);padding:4px 20px;border-radius:20px;margin-top:18px;background:linear-gradient(105deg,var(--p1),var(--p2))}
 
     /* ══════════════════════════════
        5. 신랑 신부 소개
     ══════════════════════════════ */
-    #profile{padding:72px 28px;background:linear-gradient(180deg,#F2FAFD 0%,#fff 100%)}
+    #profile{padding:72px 28px;background:linear-gradient(180deg,var(--p1) 0%,#fff 100%)}
     .profile-grid{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-top:8px}
     .profile-card{text-align:center}
     .profile-photo{
       width:100%;aspect-ratio:3/4;
       border-radius:2px;overflow:hidden;
-      background:linear-gradient(160deg,#F2FAFD 0%,#C8E8F5 50%,#9EC4D7 100%);
+      background:linear-gradient(160deg,var(--p1) 0%,var(--p3) 50%,var(--p5) 100%);
       margin-bottom:16px;position:relative;
     }
     .profile-photo img{width:100%;height:100%;object-fit:cover;display:block}
@@ -149,7 +149,7 @@
     /* ══════════════════════════════
        6. 타임라인
     ══════════════════════════════ */
-    #timeline{padding:72px 28px;background:linear-gradient(180deg,#DEF2FA 0%,#F2FAFD 40%,#fff 100%)}
+    #timeline{padding:72px 28px;background:linear-gradient(180deg,var(--p2) 0%,var(--p1) 40%,#fff 100%)}
     .tl-wrap{margin-top:8px;position:relative;padding-left:28px}
     .tl-line{position:absolute;left:5px;top:0;bottom:0;width:1px;background:linear-gradient(to bottom,var(--p5),var(--p3),rgba(222,242,250,.2))}
     .tl-item{position:relative;padding:0 0 44px 28px}
@@ -163,11 +163,11 @@
     /* ══════════════════════════════
        7. 포토 갤러리
     ══════════════════════════════ */
-    #gallery{padding:72px 0;background:linear-gradient(180deg,#F2FAFD 0%,#DEF2FA 100%)}
+    #gallery{padding:72px 0;background:linear-gradient(180deg,var(--p1) 0%,var(--p2) 100%)}
     #gallery .sec-pad{padding:0 28px}
     .gl-scroll{display:flex;gap:6px;overflow-x:auto;scroll-snap-type:x mandatory;padding:0 28px 4px;scrollbar-width:none}
     .gl-scroll::-webkit-scrollbar{display:none}
-    .gl-item{flex:0 0 68vw;max-width:280px;scroll-snap-align:start;border-radius:2px;overflow:hidden;background:linear-gradient(160deg,#F2FAFD,#9EC4D7);aspect-ratio:3/4}
+    .gl-item{flex:0 0 68vw;max-width:280px;scroll-snap-align:start;border-radius:2px;overflow:hidden;background:linear-gradient(160deg,var(--p1),var(--p5));aspect-ratio:3/4}
     .gl-item img{width:100%;height:100%;object-fit:cover;display:block}
     .gl-dots{display:flex;justify-content:center;gap:6px;padding:14px 0 0}
     .gl-dot{width:5px;height:5px;border-radius:50%;background:var(--p3);transition:all .3s;cursor:pointer}
@@ -180,7 +180,7 @@
     .loc-name{text-align:center;font-size:18px;font-weight:400;letter-spacing:2px;color:var(--t);margin-bottom:4px}
     .loc-hall{text-align:center;font-size:12px;letter-spacing:2px;color:var(--p5);margin-bottom:6px}
     .loc-addr{text-align:center;font-size:12px;color:var(--p4);line-height:1.9;margin-bottom:24px}
-    .map-box{width:100%;border-radius:4px;overflow:hidden;background:linear-gradient(135deg,#F2FAFD,#9EC4D7);margin-bottom:12px}
+    .map-box{width:100%;border-radius:4px;overflow:hidden;background:linear-gradient(135deg,var(--p1),var(--p5));margin-bottom:12px}
     .map-box iframe{width:100%;height:220px;border:none;display:block}
     .map-ph{height:220px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;color:rgba(26,53,69,.4);font-size:12px;letter-spacing:1px}
     .map-btns{display:flex;gap:8px;margin-bottom:28px}
@@ -196,7 +196,7 @@
     /* ══════════════════════════════
        9. 연락처
     ══════════════════════════════ */
-    #contact{padding:72px 28px;background:linear-gradient(180deg,#F2FAFD,#fff)}
+    #contact{padding:72px 28px;background:linear-gradient(180deg,var(--p1),#fff)}
     .ct-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
     .ct-card{background:#fff;border:1px solid var(--p3);border-radius:4px;padding:20px 16px;text-align:center}
     .ct-role{font-size:10px;letter-spacing:3px;color:var(--p5);margin-bottom:8px}
@@ -207,12 +207,12 @@
     /* ══════════════════════════════
        10. 계좌
     ══════════════════════════════ */
-    #account{padding:72px 28px;background:linear-gradient(180deg,#fff,#F2FAFD)}
+    #account{padding:72px 28px;background:linear-gradient(180deg,#fff,var(--p1))}
     .acc-tabs{display:flex;border-bottom:1px solid var(--p3);margin-bottom:24px}
     .acc-tab{flex:1;padding:12px;text-align:center;font-size:12px;letter-spacing:2px;color:var(--p4);cursor:pointer;border-bottom:2px solid transparent;transition:all .2s}
     .acc-tab.on{color:var(--t);border-bottom-color:var(--p5)}
     .acc-pnl{display:none}.acc-pnl.on{display:block}
-    .acc-item{display:flex;align-items:center;gap:12px;padding:16px;background:linear-gradient(105deg,var(--p1),#DEF2FA);border-radius:4px;margin-bottom:8px}
+    .acc-item{display:flex;align-items:center;gap:12px;padding:16px;background:linear-gradient(105deg,var(--p1),var(--p2));border-radius:4px;margin-bottom:8px}
     .acc-info{flex:1;min-width:0}
     .acc-owner{font-size:13px;font-weight:500;color:var(--t);margin-bottom:3px}
     .acc-bank{font-size:11px;color:var(--p4)}
@@ -223,7 +223,7 @@
     /* ══════════════════════════════
        11. RSVP
     ══════════════════════════════ */
-    #rsvp{padding:72px 28px;background:linear-gradient(180deg,#F2FAFD,#DEF2FA);text-align:center}
+    #rsvp{padding:72px 28px;background:linear-gradient(180deg,var(--p1),var(--p2));text-align:center}
     .rsvp-box{border:1px solid var(--p3);border-radius:4px;padding:32px 24px;background:#fff;margin-top:8px}
     .rsvp-desc{font-size:13px;color:var(--p5);line-height:2.1;letter-spacing:.3px;margin-bottom:10px}
     .rsvp-deadline{display:inline-block;font-size:11px;letter-spacing:2px;color:var(--p5);margin-bottom:28px;padding:4px 16px;border:1px solid var(--p3);border-radius:20px;background:linear-gradient(105deg,var(--p1),var(--p3))}
@@ -535,14 +535,16 @@ window.addEventListener('scroll',()=>{
   const sz=()=>{cv.width=W();cv.height=H();cv.style.width=W()+'px'};
   sz();window.addEventListener('resize',sz);
   const flakes=Array.from({length:55},()=>({x:Math.random()*480,y:Math.random()*H(),r:Math.random()*2.5+.7,v:Math.random()*.55+.22,dx:Math.random()*.28-.14,a:Math.random()*.45+.2,hex:Math.random()>.55}));
-  function hexDraw(x,y,r,a){ctx.save();ctx.globalAlpha=a;ctx.strokeStyle='#B2D8EC';ctx.lineWidth=.8;ctx.translate(x,y);for(let i=0;i<6;i++){ctx.rotate(Math.PI/3);ctx.beginPath();ctx.moveTo(0,0);ctx.lineTo(0,r*2.2);ctx.stroke();ctx.beginPath();ctx.moveTo(0,r);ctx.lineTo(r*.55,r*.5);ctx.stroke();ctx.beginPath();ctx.moveTo(0,r);ctx.lineTo(-r*.55,r*.5);ctx.stroke();}ctx.restore();}
+  const _sp4=getComputedStyle(document.documentElement).getPropertyValue('--p4').trim()||'#B2D8EC';
+  function hexDraw(x,y,r,a){ctx.save();ctx.globalAlpha=a;ctx.strokeStyle=_sp4;ctx.lineWidth=.8;ctx.translate(x,y);for(let i=0;i<6;i++){ctx.rotate(Math.PI/3);ctx.beginPath();ctx.moveTo(0,0);ctx.lineTo(0,r*2.2);ctx.stroke();ctx.beginPath();ctx.moveTo(0,r);ctx.lineTo(r*.55,r*.5);ctx.stroke();ctx.beginPath();ctx.moveTo(0,r);ctx.lineTo(-r*.55,r*.5);ctx.stroke();}ctx.restore();}
   function loop(){ctx.clearRect(0,0,W(),H());flakes.forEach(f=>{f.y+=f.v;f.x+=f.dx;if(f.y>H())f.y=-10,f.x=Math.random()*W();if(f.x>W())f.x=0;if(f.x<0)f.x=W();if(f.hex&&f.r>1.8)hexDraw(f.x,f.y,f.r,f.a);else{ctx.beginPath();ctx.arc(f.x,f.y,f.r,0,Math.PI*2);ctx.fillStyle=`rgba(178,216,236,${f.a})`;ctx.fill();}});requestAnimationFrame(loop);}
   loop();
 })();
 
 /* ── 반짝이 ── */
 document.addEventListener('click',e=>{
-  const colors=['#C8E8F5','#B2D8EC','#9EC4D7','#fff','#DEF2FA'];
+  const _cs=getComputedStyle(document.documentElement);
+  const colors=[_cs.getPropertyValue('--p3').trim(),_cs.getPropertyValue('--p4').trim(),_cs.getPropertyValue('--p5').trim(),'#fff',_cs.getPropertyValue('--p2').trim()];
   for(let i=0;i<8;i++){const sp=document.createElement('div');sp.className='sp';const s=Math.random()*7+3,tx=(Math.random()-.5)*64,ty=(Math.random()-.5)*64;sp.style.cssText=`left:${e.clientX}px;top:${e.clientY}px;width:${s}px;height:${s}px;background:${colors[i%5]};--tx:${tx}px;--ty:${ty}px;animation-delay:${i*.04}s`;document.body.appendChild(sp);setTimeout(()=>sp.remove(),700);}
 });
 
