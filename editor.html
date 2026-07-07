@@ -206,6 +206,15 @@
       font-family:var(--sans);white-space:nowrap;
     }
 
+    /* ── 컬러 피커 ── */
+    .color-pick-row{display:flex;align-items:center;gap:12px;margin-bottom:8px}
+    input[type=color]{width:48px;height:48px;border:1px solid var(--border);border-radius:8px;cursor:pointer;padding:2px;background:var(--white)}
+    .swatches{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:16px}
+    .swatch{height:52px;border-radius:8px;border:1px solid rgba(0,0,0,.08);transition:background .2s}
+    .swatch-lbl{font-size:11px;color:var(--text2);text-align:center;margin-top:4px}
+    .theme-preview{margin-top:20px;border-radius:10px;overflow:hidden;border:1px solid var(--border)}
+    .theme-preview-bar{height:8px}
+
     /* ── 토스트 ── */
     #toast{
       position:fixed;bottom:24px;left:50%;
@@ -243,6 +252,7 @@
   <button class="tab" data-tab="photos" onclick="showTab('photos')">사진</button>
   <button class="tab" data-tab="account" onclick="showTab('account')">계좌</button>
   <button class="tab" data-tab="rsvp" onclick="showTab('rsvp')">RSVP</button>
+  <button class="tab" data-tab="theme" onclick="showTab('theme')">테마</button>
 </nav>
 
 <main>
@@ -445,6 +455,34 @@
     <div class="field">
       <label>카카오톡 오픈채팅 URL (선택)</label>
       <input id="rsvp-kakao" type="url" placeholder="https://open.kakao.com/..."/>
+    </div>
+  </div>
+</div>
+
+<!-- ══ 테마 ══ -->
+<div id="pane-theme" class="pane">
+  <div class="sec">
+    <div class="sec-hd">색상 테마</div>
+    <div class="field">
+      <label>기준 색상 (가장 어두운 포인트 색)</label>
+      <div class="color-pick-row">
+        <input type="color" id="theme-color" value="#9EC4D7" oninput="previewTheme(this.value)"/>
+        <span id="theme-hex" style="font-size:15px;font-weight:600;letter-spacing:.5px">#9EC4D7</span>
+      </div>
+      <div class="field-hint">선택한 색을 기준으로 텍스트·포인트·보조·배경색이 자동 생성됩니다.</div>
+    </div>
+    <div class="swatches">
+      <div><div class="swatch" id="sw-text"></div><div class="swatch-lbl">텍스트</div></div>
+      <div><div class="swatch" id="sw-primary"></div><div class="swatch-lbl">포인트</div></div>
+      <div><div class="swatch" id="sw-secondary"></div><div class="swatch-lbl">보조</div></div>
+      <div><div class="swatch" id="sw-bg"></div><div class="swatch-lbl">배경</div></div>
+    </div>
+    <div class="theme-preview" id="theme-preview-box" style="margin-top:20px">
+      <div class="theme-preview-bar" id="theme-preview-bar"></div>
+      <div style="padding:16px 20px" id="theme-preview-body">
+        <div style="font-size:13px;font-weight:700;margin-bottom:4px" id="tp-name">목종성 ♥ 이현이</div>
+        <div style="font-size:11px" id="tp-date">2026 · 11 · 21</div>
+      </div>
     </div>
   </div>
 </div>
@@ -685,6 +723,10 @@ function populate(){
   $('rsvp-form').value=val(C2,'rsvp','formUrl');
   $('rsvp-kakao').value=val(C2,'rsvp','kakaoUrl');
 
+  const tc=val(C2,'theme','primary')||'#9EC4D7';
+  $('theme-color').value=tc;
+  previewTheme(tc);
+
   restorePhoto('main');
   restorePhoto('featured');
   restorePhoto('groom');
@@ -702,6 +744,11 @@ const PZ_DEF={
 };
 
 function restorePhoto(key){
+  const d=PZ_DEF[key];
+  const z=$('pz-'+key);
+  z.classList.remove('has');
+  z.innerHTML=`<input type="file" accept="image/*" onchange="uploadPhoto('${key}',this)"/>
+    <div class="pz-icon">${d.icon}</div><div class="pz-txt">${d.txt}</div>`;
   const src=localStorage.getItem('wc_img_'+key);
   if(src)applyPhotoZone(key,src);
 }
@@ -784,6 +831,43 @@ function compress(file,maxW){
   });
 }
 
+/* ── 컬러 팔레트 생성 ── */
+function hexToHsl(hex){
+  let r=parseInt(hex.slice(1,3),16)/255,g=parseInt(hex.slice(3,5),16)/255,b=parseInt(hex.slice(5,7),16)/255;
+  const max=Math.max(r,g,b),min=Math.min(r,g,b),d=max-min;
+  let h=0,s=0,l=(max+min)/2;
+  if(d){s=d/(1-Math.abs(2*l-1));if(max===r)h=((g-b)/d+6)%6;else if(max===g)h=(b-r)/d+2;else h=(r-g)/d+4;h*=60;}
+  return[h,s,l];
+}
+function hslToHex(h,s,l){
+  s=Math.max(0,Math.min(1,s));l=Math.max(0,Math.min(1,l));
+  const a=s*Math.min(l,1-l);
+  const f=n=>{const k=(n+h/30)%12,c=a*Math.max(-1,Math.min(k-3,9-k,1));return Math.round((l-c)*255).toString(16).padStart(2,'0');};
+  return`#${f(0)}${f(8)}${f(4)}`;
+}
+function generatePalette(hex){
+  const[h,s,l]=hexToHsl(hex);
+  return{
+    primary:hex,
+    secondary:hslToHex(h,s*.6,Math.min(l+.28,.96)),
+    accent:hex,
+    text:hslToHex(h,Math.min(s*1.1,1),Math.max(l-.25,.08)),
+    background:hslToHex(h,s*.35,Math.min(l+.42,.98)),
+  };
+}
+window.previewTheme=function(hex){
+  $('theme-hex').textContent=hex.toUpperCase();
+  const p=generatePalette(hex);
+  $('sw-text').style.background=p.text;
+  $('sw-primary').style.background=p.primary;
+  $('sw-secondary').style.background=p.secondary;
+  $('sw-bg').style.background=p.background;
+  $('theme-preview-bar').style.background=`linear-gradient(to right,${p.text},${p.primary},${p.secondary})`;
+  $('theme-preview-body').style.background=p.background;
+  $('tp-name').style.color=p.text;
+  $('tp-date').style.color=p.primary;
+};
+
 /* ── 저장 공간 ── */
 function updateStorage(){
   let total=0;
@@ -813,6 +897,7 @@ window.saveAll=async function(){
     })),
     rsvp:{enabled:$('rsvp-en').checked,deadline:$('rsvp-dl').value,
       formUrl:$('rsvp-form').value,kakaoUrl:$('rsvp-kakao').value},
+    theme:generatePalette($('theme-color').value),
   };
   try{
     localStorage.setItem('wc_data',JSON.stringify(data));
