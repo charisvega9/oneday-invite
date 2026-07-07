@@ -34,7 +34,7 @@
 
     /* ── BGM ── */
     #bgm{position:fixed;right:20px;bottom:28px;z-index:300;display:none;flex-direction:column;align-items:center;gap:5px}
-    .bgm-disc{width:48px;height:48px;border-radius:50%;position:relative;cursor:pointer;box-shadow:0 4px 20px rgba(74,144,168,.3)}
+    .bgm-disc{width:48px;height:48px;border-radius:50%;position:relative;cursor:pointer;box-shadow:0 4px 20px color-mix(in srgb,var(--p5) 30%,transparent)}
     .bgm-disc svg{width:48px;height:48px;border-radius:50%}
     .bgm-center{position:absolute;inset:13px;border-radius:50%;background:#fff;display:flex;align-items:center;justify-content:center}
     .bgm-disc.spin{animation:spin 5s linear infinite}
@@ -59,7 +59,7 @@
       background:linear-gradient(160deg,var(--p1) 0%,var(--p2) 25%,var(--p3) 50%,var(--p4) 75%,var(--p5) 100%);
     }
     .cover-bg img{width:100%;height:100%;object-fit:cover;display:block}
-    .cover-overlay{position:absolute;inset:0;background:linear-gradient(to top,rgba(158,196,215,.45) 0%,rgba(178,216,236,.08) 55%,transparent 100%)}
+    .cover-overlay{position:absolute;inset:0;background:linear-gradient(to top,color-mix(in srgb,var(--p4) 45%,transparent) 0%,color-mix(in srgb,var(--p4) 8%,transparent) 55%,transparent 100%)}
 
     .cover-card{
       position:relative;z-index:2;text-align:center;
@@ -92,7 +92,7 @@
     .featured-ph{
       height:420px;display:flex;align-items:center;justify-content:center;
       background:linear-gradient(135deg,var(--p1) 0%,var(--p3) 50%,var(--p5) 100%);
-      color:rgba(26,53,69,.45);font-size:13px;letter-spacing:2px;flex-direction:column;gap:10px;
+      color:color-mix(in srgb,var(--t) 45%,transparent);font-size:13px;letter-spacing:2px;flex-direction:column;gap:10px;
     }
 
     /* ══════════════════════════════
@@ -138,7 +138,7 @@
       margin-bottom:16px;position:relative;
     }
     .profile-photo img{width:100%;height:100%;object-fit:cover;display:block}
-    .profile-photo-ph{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:rgba(26,53,69,.4);font-size:11px;letter-spacing:1px;flex-direction:column;gap:6px}
+    .profile-photo-ph{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:color-mix(in srgb,var(--t) 40%,transparent);font-size:11px;letter-spacing:1px;flex-direction:column;gap:6px}
     .profile-role{font-size:10px;letter-spacing:3px;color:var(--p5);margin-bottom:6px}
     .profile-name{font-size:20px;font-weight:400;letter-spacing:3px;color:var(--t);margin-bottom:8px}
     .profile-family{font-size:11px;color:var(--p4);line-height:2;letter-spacing:.5px;margin-bottom:12px}
@@ -151,7 +151,7 @@
     ══════════════════════════════ */
     #timeline{padding:72px 28px;background:linear-gradient(180deg,var(--p2) 0%,var(--p1) 40%,#fff 100%)}
     .tl-wrap{margin-top:8px;position:relative;padding-left:28px}
-    .tl-line{position:absolute;left:5px;top:0;bottom:0;width:1px;background:linear-gradient(to bottom,var(--p5),var(--p3),rgba(222,242,250,.2))}
+    .tl-line{position:absolute;left:5px;top:0;bottom:0;width:1px;background:linear-gradient(to bottom,var(--p5),var(--p3),color-mix(in srgb,var(--p2) 20%,transparent))}
     .tl-item{position:relative;padding:0 0 44px 28px}
     .tl-item:last-child{padding-bottom:0}
     .tl-dot{position:absolute;left:-5px;top:5px;width:11px;height:11px;border-radius:50%;border:2px solid var(--p3);background:#fff;transition:all .4s}
@@ -182,7 +182,7 @@
     .loc-addr{text-align:center;font-size:12px;color:var(--p4);line-height:1.9;margin-bottom:24px}
     .map-box{width:100%;border-radius:4px;overflow:hidden;background:linear-gradient(135deg,var(--p1),var(--p5));margin-bottom:12px}
     .map-box iframe{width:100%;height:220px;border:none;display:block}
-    .map-ph{height:220px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;color:rgba(26,53,69,.4);font-size:12px;letter-spacing:1px}
+    .map-ph{height:220px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;color:color-mix(in srgb,var(--t) 40%,transparent);font-size:12px;letter-spacing:1px}
     .map-btns{display:flex;gap:8px;margin-bottom:28px}
     .map-btn{flex:1;padding:13px;text-align:center;border:1px solid var(--p3);border-radius:2px;background:#fff;color:var(--t);font-family:var(--kr);font-size:12px;letter-spacing:1px;text-decoration:none;display:block;transition:all .2s}
     .map-btn:hover{background:linear-gradient(105deg,var(--p3),var(--p5));border-color:var(--p5);color:#fff}
@@ -279,7 +279,7 @@
 <!-- BGM -->
 <div id="bgm">
   <div class="bgm-disc" id="bgm-disc" onclick="toggleBgm()">
-    <svg viewBox="0 0 48 48"><defs><linearGradient id="dg" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#C8E2EE"/><stop offset="50%" stop-color="#9EC4D7"/><stop offset="100%" stop-color="#4A8EA8"/></linearGradient></defs><circle cx="24" cy="24" r="24" fill="url(#dg)"/></svg>
+    <svg viewBox="0 0 48 48"><defs><linearGradient id="dg" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" style="stop-color:var(--p3)"/><stop offset="50%" style="stop-color:var(--p5)"/><stop offset="100%" style="stop-color:var(--t)"/></linearGradient></defs><circle cx="24" cy="24" r="24" fill="url(#dg)"/></svg>
     <div class="bgm-center">
       <svg id="bgm-play" width="13" height="13" viewBox="0 0 24 24" fill="var(--a)"><polygon points="5,3 19,12 5,21"/></svg>
       <svg id="bgm-pause" width="13" height="13" viewBox="0 0 24 24" fill="var(--a)" style="display:none"><rect x="6" y="4" width="4" height="16" rx="1"/><rect x="14" y="4" width="4" height="16" rx="1"/></svg>
@@ -428,7 +428,7 @@
   <div class="rv">
     <span class="sec-en">Gift</span>
     <div class="thin-line"></div>
-    <p style="text-align:center;font-size:12px;color:#9bbdd0;margin-bottom:28px;line-height:2;letter-spacing:.3px">축하의 마음을 전해주시려는 분들을 위해<br>삼가 계좌번호를 안내드립니다.</p>
+    <p style="text-align:center;font-size:12px;color:var(--p4);margin-bottom:28px;line-height:2;letter-spacing:.3px">축하의 마음을 전해주시려는 분들을 위해<br>삼가 계좌번호를 안내드립니다.</p>
     <div class="acc-tabs" id="acc-tabs"></div>
     <div id="acc-pnls"></div>
   </div>
@@ -686,7 +686,7 @@ window.copyAcc=function(num,id){navigator.clipboard.writeText(num.replace(/-/g,'
   const btns=$('rsvp-btns');
   if(r.formUrl){const a=document.createElement('a');a.className='rsvp-btn rsvp-btn-main';a.href=r.formUrl;a.target='_blank';a.innerHTML='<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>참석 여부 알리기';btns.appendChild(a);}
   if(r.kakaoUrl){const a=document.createElement('a');a.className='rsvp-btn rsvp-btn-sub';a.href=r.kakaoUrl;a.target='_blank';a.textContent='카카오톡으로 알리기';btns.appendChild(a);}
-  if(!r.formUrl&&!r.kakaoUrl){const el=document.createElement('p');el.style.cssText='font-size:12px;color:#9bbdd0;text-align:center;margin-top:8px';el.textContent='신랑·신부에게 직접 연락해 주세요.';btns.parentNode.appendChild(el);}
+  if(!r.formUrl&&!r.kakaoUrl){const el=document.createElement('p');el.style.cssText='font-size:12px;color:var(--p4);text-align:center;margin-top:8px';el.textContent='신랑·신부에게 직접 연락해 주세요.';btns.parentNode.appendChild(el);}
 })();
 
 /* ── 푸터 ── */
