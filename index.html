@@ -504,6 +504,12 @@
     const next=JSON.stringify(cloud);
     if(prev!==next){
       localStorage.setItem('wc_data',next);
+      const p=cloud.photoUrls||{};
+      if(p.main)localStorage.setItem('wc_img_main',p.main);
+      if(p.featured)localStorage.setItem('wc_img_featured',p.featured);
+      if(p.groom)localStorage.setItem('wc_img_groom',p.groom);
+      if(p.bride)localStorage.setItem('wc_img_bride',p.bride);
+      if(p.gallery?.length)localStorage.setItem('wc_img_gallery',JSON.stringify(p.gallery));
       location.reload();
     }
   }catch(e){}

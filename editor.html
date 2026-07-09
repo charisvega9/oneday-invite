@@ -651,6 +651,7 @@ window.connectCloud=async function(){
     const cloud=await cloudLoad();
     if(cloud){
       localStorage.setItem('wc_data',JSON.stringify(cloud));
+      restoreImagesFromCloud(cloud);
       populate();
       toast('✅ 연결 완료! 저장된 데이터를 불러왔습니다.');
     } else {
@@ -687,7 +688,7 @@ async function checkHashSetup(){
     localStorage.setItem('wc_gs',url);
     updateCloudBtn();
     const cloud=await cloudLoad();
-    if(cloud)localStorage.setItem('wc_data',JSON.stringify(cloud));
+    if(cloud){localStorage.setItem('wc_data',JSON.stringify(cloud));restoreImagesFromCloud(cloud);}
     toast('✅ 새 기기에 클라우드 연결 완료!');
   }catch(e){}
 }
@@ -797,7 +798,19 @@ function applyPhotoZone(key,src){
 
 window.uploadPhoto=function(key,input){
   const file=input.files[0];if(!file)return;
-  compress(file,1200).then(src=>{
+  const z=$('pz-'+key);
+  z.innerHTML=`<div style="height:120px;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:10px;color:var(--text2)">
+    <div style="width:28px;height:28px;border:3px solid var(--blue-bd);border-top-color:var(--blue);border-radius:50%;animation:pz-spin .8s linear infinite"></div>
+    <div style="font-size:12px">${_gsUrl?'Drive에 업로드 중...':'처리 중...'}</div>
+  </div>
+  <style>@keyframes pz-spin{to{transform:rotate(360deg)}}</style>`;
+  compress(file,1200).then(async base64=>{
+    let src=base64;
+    if(_gsUrl){
+      const driveUrl=await uploadToDrive(base64,`${key}_${Date.now()}.jpg`);
+      if(driveUrl)src=driveUrl;
+      else toast('⚠️ Drive 업로드 실패, 로컬에 저장됩니다.');
+    }
     localStorage.setItem('wc_img_'+key,src);
     applyPhotoZone(key,src);
     updateStorage();
@@ -834,11 +847,21 @@ function renderGallery(){
 
 window.uploadGallery=function(input){
   const files=[...input.files];if(!files.length)return;
-  const promises=files.map(f=>compress(f,1000));
-  Promise.all(promises).then(srcs=>{
+  toast('⏳ 사진 업로드 중...');
+  Promise.all(files.map(f=>compress(f,1000))).then(async base64List=>{
+    const srcs=[];
+    for(let i=0;i<base64List.length;i++){
+      let src=base64List[i];
+      if(_gsUrl){
+        const url=await uploadToDrive(src,`gallery_${Date.now()}_${i}.jpg`);
+        if(url)src=url;
+      }
+      srcs.push(src);
+    }
     galleryImages.push(...srcs);
     localStorage.setItem('wc_img_gallery',JSON.stringify(galleryImages));
     renderGallery();updateStorage();
+    toast('✅ 사진 업로드 완료!');
   });
 };
 
@@ -862,6 +885,29 @@ function compress(file,maxW){
     };
     img.src=url;
   });
+}
+
+/* ── Google Drive 업로드 ── */
+async function uploadToDrive(base64,fileName){
+  if(!_gsUrl)return null;
+  try{
+    const res=await fetch(_gsUrl,{
+      method:'POST',
+      body:JSON.stringify({action:'uploadImage',imageData:base64,fileName})
+    });
+    const json=await res.json();
+    return(json.ok&&json.url)?json.url:null;
+  }catch(e){return null;}
+}
+
+/* ── 클라우드에서 이미지 복원 ── */
+function restoreImagesFromCloud(cloud){
+  const p=cloud.photoUrls||{};
+  if(p.main)localStorage.setItem('wc_img_main',p.main);
+  if(p.featured)localStorage.setItem('wc_img_featured',p.featured);
+  if(p.groom)localStorage.setItem('wc_img_groom',p.groom);
+  if(p.bride)localStorage.setItem('wc_img_bride',p.bride);
+  if(p.gallery?.length)localStorage.setItem('wc_img_gallery',JSON.stringify(p.gallery));
 }
 
 /* ── 컬러 팔레트 생성 ── */
@@ -931,6 +977,13 @@ window.saveAll=async function(){
     rsvp:{enabled:$('rsvp-en').checked,deadline:$('rsvp-dl').value,
       formUrl:$('rsvp-form').value,kakaoUrl:$('rsvp-kakao').value},
     theme:generatePalette($('theme-color').value),
+    photoUrls:{
+      main:localStorage.getItem('wc_img_main')||'',
+      featured:localStorage.getItem('wc_img_featured')||'',
+      groom:localStorage.getItem('wc_img_groom')||'',
+      bride:localStorage.getItem('wc_img_bride')||'',
+      gallery:JSON.parse(localStorage.getItem('wc_img_gallery')||'[]'),
+    },
   };
   try{
     localStorage.setItem('wc_data',JSON.stringify(data));
@@ -990,6 +1043,7 @@ const DEFAULT_GS_URL='https://script.google.com/macros/s/AKfycbyDklnloqFKVfcKsAB
       const cloud=await cloudLoad();
       if(cloud){
         localStorage.setItem('wc_data',JSON.stringify(cloud));
+        restoreImagesFromCloud(cloud);
         toast('☁️ 클라우드에서 데이터를 불러왔습니다.');
       }
     }
