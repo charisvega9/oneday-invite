@@ -900,6 +900,30 @@ async function uploadToDrive(base64,fileName){
   }catch(e){return null;}
 }
 
+/* base64이면 Drive에 올리고 URL 반환, 이미 URL이면 그대로 반환 */
+async function ensureDriveUrl(key){
+  const src=localStorage.getItem('wc_img_'+key);
+  if(!src)return'';
+  if(src.startsWith('http'))return src;
+  if(!_gsUrl)return'';
+  const url=await uploadToDrive(src,`${key}_${Date.now()}.jpg`);
+  if(url)localStorage.setItem('wc_img_'+key,url);
+  return url||'';
+}
+
+async function ensureGalleryUrls(){
+  const raw=JSON.parse(localStorage.getItem('wc_img_gallery')||'[]');
+  if(!raw.length||!_gsUrl)return[];
+  const urls=[];
+  for(let i=0;i<raw.length;i++){
+    if(raw[i].startsWith('http')){urls.push(raw[i]);continue;}
+    const url=await uploadToDrive(raw[i],`gallery_${Date.now()}_${i}.jpg`);
+    if(url)urls.push(url);
+  }
+  if(urls.length)localStorage.setItem('wc_img_gallery',JSON.stringify(urls));
+  return urls;
+}
+
 /* ── 클라우드에서 이미지 복원 ── */
 function restoreImagesFromCloud(cloud){
   const p=cloud.photoUrls||{};
@@ -960,6 +984,26 @@ function updateStorage(){
 
 /* ── 저장 ── */
 window.saveAll=async function(){
+  const saveBtn=document.querySelector('.btn-primary');
+  saveBtn.textContent='⏳ 저장 중...';saveBtn.disabled=true;
+
+  /* 이미지: base64 → Drive URL 자동 변환 */
+  let photoUrls={main:'',featured:'',groom:'',bride:'',gallery:[]};
+  if(_gsUrl){
+    toast('⏳ 이미지 Drive 동기화 중...');
+    const[main,featured,groom,bride]=await Promise.all([
+      ensureDriveUrl('main'),ensureDriveUrl('featured'),
+      ensureDriveUrl('groom'),ensureDriveUrl('bride'),
+    ]);
+    const gallery=await ensureGalleryUrls();
+    photoUrls={main,featured,groom,bride,gallery};
+    /* 변환된 URL로 에디터 사진 영역 갱신 */
+    ['main','featured','groom','bride'].forEach(k=>{
+      const url=photoUrls[k];
+      if(url&&url.startsWith('http'))applyPhotoZone(k,url);
+    });
+  }
+
   const data={
     groom:{name:$('g-name').value,phone:$('g-phone').value,father:$('g-father').value,mother:$('g-mother').value},
     bride:{name:$('b-name').value,phone:$('b-phone').value,father:$('b-father').value,mother:$('b-mother').value},
@@ -977,17 +1021,13 @@ window.saveAll=async function(){
     rsvp:{enabled:$('rsvp-en').checked,deadline:$('rsvp-dl').value,
       formUrl:$('rsvp-form').value,kakaoUrl:$('rsvp-kakao').value},
     theme:generatePalette($('theme-color').value),
-    photoUrls:{
-      main:localStorage.getItem('wc_img_main')||'',
-      featured:localStorage.getItem('wc_img_featured')||'',
-      groom:localStorage.getItem('wc_img_groom')||'',
-      bride:localStorage.getItem('wc_img_bride')||'',
-      gallery:JSON.parse(localStorage.getItem('wc_img_gallery')||'[]'),
-    },
+    photoUrls,
   };
+
   try{
     localStorage.setItem('wc_data',JSON.stringify(data));
   }catch(e){
+    saveBtn.textContent='💾 저장';saveBtn.disabled=false;
     if(e.name==='QuotaExceededError')
       alert('저장 공간이 부족합니다. 갤러리 사진을 줄이거나 해상도를 낮춰 다시 시도해주세요.');
     else alert('저장 중 오류가 발생했습니다: '+e.message);
@@ -1003,6 +1043,7 @@ window.saveAll=async function(){
   } else {
     toast('✅ 저장되었습니다!');
   }
+  saveBtn.textContent='💾 저장';saveBtn.disabled=false;
 };
 
 /* ── 초기화 ── */
