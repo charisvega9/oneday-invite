@@ -485,11 +485,14 @@
   try{
     const ov=JSON.parse(localStorage.getItem('wc_data')||'{}');
     deepMerge(WEDDING_CONFIG,ov);
-    const mp=localStorage.getItem('wc_img_main');if(mp)WEDDING_CONFIG.mainPhoto=mp;
-    const fp=localStorage.getItem('wc_img_featured');if(fp)WEDDING_CONFIG.featuredPhoto=fp;
-    const gp=localStorage.getItem('wc_img_groom');if(gp)WEDDING_CONFIG.groom.photo=gp;
-    const bp=localStorage.getItem('wc_img_bride');if(bp)WEDDING_CONFIG.bride.photo=bp;
-    const gl=JSON.parse(localStorage.getItem('wc_img_gallery')||'[]');if(gl.length)WEDDING_CONFIG.photos=gl;
+    const pu=ov.photoUrls||{};
+    const mp=localStorage.getItem('wc_img_main')||pu.main;if(mp)WEDDING_CONFIG.mainPhoto=mp;
+    const fp=localStorage.getItem('wc_img_featured')||pu.featured;if(fp)WEDDING_CONFIG.featuredPhoto=fp;
+    const gp=localStorage.getItem('wc_img_groom')||pu.groom;if(gp)WEDDING_CONFIG.groom.photo=gp;
+    const bp=localStorage.getItem('wc_img_bride')||pu.bride;if(bp)WEDDING_CONFIG.bride.photo=bp;
+    const gl=JSON.parse(localStorage.getItem('wc_img_gallery')||'[]');
+    const glp=pu.gallery||[];
+    if(gl.length)WEDDING_CONFIG.photos=gl;else if(glp.length)WEDDING_CONFIG.photos=glp;
   }catch(e){}
 })();
 
