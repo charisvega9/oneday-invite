@@ -1128,6 +1128,8 @@ window.toast=function(msg){
 
 /* ── 앱 시작 ── */
 const DEFAULT_GS_URL='https://script.google.com/macros/s/AKfycbzw7dnlhqNBUwysCMjscad2J6jNZIWxlA48US_ZI86phhguIwLhQSJR2f46j_ROrRq7/exec';
+/* 구버전 URL이 저장되어 있으면 새 URL로 교체 */
+(()=>{const stored=localStorage.getItem('wc_gs');if(stored&&stored!==DEFAULT_GS_URL)localStorage.setItem('wc_gs',DEFAULT_GS_URL);})();
 (async()=>{
   await checkHashSetup();
   const url=getGsUrl()||DEFAULT_GS_URL;
@@ -1136,7 +1138,7 @@ const DEFAULT_GS_URL='https://script.google.com/macros/s/AKfycbzw7dnlhqNBUwysCMj
     const json=await res.json();
     if(json){
       _gsUrl=url;
-      if(!getGsUrl())localStorage.setItem('wc_gs',url);
+      localStorage.setItem('wc_gs',url);
       updateCloudBtn();
       const cloud=await cloudLoad();
       if(cloud){
