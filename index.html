@@ -110,7 +110,7 @@
     #schedule{padding:72px 28px;background:linear-gradient(180deg,#fff 0%,var(--p1) 10%,#DEEDFF 100%);text-align:center}
     .big-date-num{font-family:var(--kr);font-size:88px;font-weight:800;color:#000;letter-spacing:-2px;line-height:1}
     .big-date-label{font-family:var(--kr);font-size:13px;letter-spacing:4px;color:#000;margin:10px 0 4px}
-    .big-date-time{font-family:var(--kr);font-size:13px;letter-spacing:2px;color:var(--p5)}
+    .big-date-time{font-family:var(--kr);font-size:13px;letter-spacing:2px;color:000;}
 
     /* 캘린더 */
     .cal{margin:36px auto 0;max-width:300px;border:1px solid var(--p3);border-radius:8px;overflow:hidden;background:#fff}
@@ -124,7 +124,7 @@
     .cal-days{display:grid;grid-template-columns:repeat(7,1fr);gap:2px;text-align:center}
     .cal-d{font-family:var(--kr);font-size:12px;padding:6px 2px;color:#000;border-radius:50%;position:relative;line-height:1.4}
     .cal-d.mark{background:none;color:#fff;font-weight:700;position:relative;z-index:0}
-    .cal-d.mark::before{content:'♥';position:absolute;left:50%;top:50%;transform:translate(-50%,-55%);font-size:30px;color:#547196;z-index:-1;line-height:1}
+    .cal-d.mark::before{content:'♥';position:absolute;left:50%;top:50%;transform:translate(-50%,-42%);font-size:30px;color:#547196;z-index:-1;line-height:1}
     .cal-d.dim{color:#ccc}
 
     /* 카운트다운 */
@@ -176,26 +176,29 @@
     ══════════════════════════════ */
     #gallery{padding:72px 0;background:#fff}
     #gallery .sec-pad{padding:0 28px}
-    .gl-wrap{position:relative}
-    .gl-wrap::before,.gl-wrap::after{content:'';position:absolute;top:0;bottom:0;width:36px;z-index:2;pointer-events:none}
-    .gl-wrap::before{left:0;background:linear-gradient(to right,#fff,transparent)}
-    .gl-wrap::after{right:0;background:linear-gradient(to left,#fff,transparent)}
-    .gl-scroll{display:flex;gap:14px;overflow-x:auto;scroll-snap-type:x mandatory;padding:8px 28px 16px;scrollbar-width:none}
-    .gl-scroll::-webkit-scrollbar{display:none}
-    .gl-item{
-      flex:0 0 72vw;max-width:310px;scroll-snap-align:center;
-      border-radius:12px;overflow:hidden;
-      background:var(--p2);aspect-ratio:2/3;
-      box-shadow:0 6px 28px rgba(0,0,0,.10),0 2px 8px rgba(0,0,0,.06);
-      transition:transform .35s ease,box-shadow .35s ease;
-    }
-    .gl-item.active{transform:scale(1.03);box-shadow:0 14px 40px rgba(0,0,0,.16),0 4px 12px rgba(0,0,0,.08)}
-    .gl-item img{width:100%;height:100%;object-fit:cover;display:block}
-    .gl-footer{display:flex;align-items:center;justify-content:center;gap:16px;padding:18px 0 0}
-    .gl-counter{font-family:var(--script);font-size:16px;letter-spacing:2px;color:#000}
-    .gl-lines{display:flex;gap:5px;align-items:center}
-    .gl-line{width:18px;height:1px;background:var(--p3);transition:all .35s;cursor:pointer}
-    .gl-line.on{width:36px;background:var(--p5)}
+    /* 혼합 그리드 */
+    .gl-grid{padding:0 3px}
+    .gl-row-full{margin-bottom:3px;overflow:hidden;cursor:pointer;background:var(--p2);aspect-ratio:4/3;position:relative}
+    .gl-row-two{display:grid;grid-template-columns:1fr 1fr;gap:3px;margin-bottom:3px}
+    .gl-grid-item{overflow:hidden;cursor:pointer;background:var(--p2);aspect-ratio:3/4;position:relative}
+    .gl-grid-item img,.gl-row-full img{width:100%;height:100%;object-fit:cover;display:block;transition:transform .35s ease}
+    .gl-grid-item:active img,.gl-row-full:active img{transform:scale(1.04)}
+    /* 더보기 */
+    .gl-more-wrap{position:relative;overflow:hidden}
+    .gl-more-wrap.collapsed .gl-more-fade{display:block}
+    .gl-more-fade{display:none;position:absolute;bottom:0;left:0;right:0;height:140px;background:linear-gradient(to bottom,transparent,#fff);pointer-events:none}
+    .gl-more-btn{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;padding:16px;background:none;border:none;cursor:pointer;font-family:var(--sans);font-size:13px;letter-spacing:1px;color:#547196;margin-top:4px}
+    .gl-more-btn span{display:inline-block;transition:transform .3s}
+    .gl-more-btn.open span{transform:rotate(180deg)}
+    /* 라이트박스 */
+    #gl-lb{position:fixed;inset:0;background:rgba(0,0,0,.96);z-index:1000;display:flex;flex-direction:column;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .25s}
+    #gl-lb.on{opacity:1;pointer-events:all}
+    #gl-lb img{max-width:100%;max-height:82dvh;object-fit:contain;user-select:none;touch-action:pan-y}
+    .lb-close{position:absolute;top:16px;right:18px;color:rgba(255,255,255,.8);font-size:28px;cursor:pointer;padding:8px;z-index:2;background:none;border:none;line-height:1}
+    .lb-nav{position:absolute;top:50%;transform:translateY(-50%);color:rgba(255,255,255,.7);font-size:36px;cursor:pointer;padding:14px 18px;user-select:none;z-index:2;background:none;border:none;line-height:1}
+    .lb-nav:active{color:#fff}
+    #lb-prev{left:0}#lb-next{right:0}
+    .lb-counter{position:absolute;bottom:22px;left:50%;transform:translateX(-50%);color:rgba(255,255,255,.5);font-family:var(--script);font-size:13px;letter-spacing:2px;white-space:nowrap}
 
     /* ══════════════════════════════
        8. 오시는 길
@@ -241,7 +244,7 @@
     .acc-bank{font-size:11px;color:#000}
     .acc-num{font-size:13px;color:#000;margin-top:3px;letter-spacing:.5px}
     .cp-btn{flex-shrink:0;padding:8px 14px;background:#FFFFFF;border:1px solid #547196;border-radius:5px;font-size:11px;font-family:var(--sans);color:#000;cursor:pointer;letter-spacing:1px;transition:all .2s;white-space:nowrap}
-    .cp-btn:hover,.cp-btn.done{background:linear-gradient(105deg,var(--p3),var(--p5));border-color:var(--p5);color:#fff}
+    
 
     /* ══════════════════════════════
        11. RSVP
@@ -411,14 +414,25 @@
     <span class="sec-en">Gallery</span>
     <div class="thin-line"></div>
   </div>
-  <div class="gl-wrap">
-    <div class="gl-scroll" id="gl-scroll"></div>
+  <div class="gl-grid" id="gl-grid">
+    <div class="gl-more-wrap collapsed" id="gl-more-wrap">
+      <div id="gl-grid-inner"></div>
+      <div class="gl-more-fade"></div>
+    </div>
   </div>
-  <div class="gl-footer">
-    <div class="gl-lines" id="gl-lines"></div>
-    <span class="gl-counter" id="gl-counter">01 / 01</span>
-  </div>
+  <button class="gl-more-btn" id="gl-more-btn" style="display:none">
+    <span>▼</span><span id="gl-more-label">갤러리 더보기</span>
+  </button>
 </section>
+
+<!-- 라이트박스 -->
+<div id="gl-lb">
+  <button class="lb-close" id="lb-close">✕</button>
+  <button class="lb-nav" id="lb-prev">&#8249;</button>
+  <img id="lb-img" src="" alt=""/>
+  <button class="lb-nav" id="lb-next">&#8250;</button>
+  <span class="lb-counter" id="lb-counter"></span>
+</div>
 
 <!-- ══ 8. 오시는 길 ══ -->
 <section id="location">
@@ -651,30 +665,96 @@ tick();setInterval(tick,1000);
 ;(()=>{
   if(!C.photos||!C.photos.length)return;
   $('gallery').style.display='block';
-  const wrap=$('gl-scroll'),lines=$('gl-lines'),counter=$('gl-counter');
+  const inner=$('gl-grid-inner');
   const total=C.photos.length;
+  const PREVIEW=6; /* 처음 보여줄 장수 */
   const pad=n=>String(n).padStart(2,'0');
-  const items=[];
-  C.photos.forEach((src,i)=>{
-    const item=document.createElement('div');item.className='gl-item'+(i===0?' active':'');
-    const img=document.createElement('img');img.src=src;img.alt='사진 '+(i+1);img.loading='lazy';
-    item.appendChild(img);wrap.appendChild(item);items.push(item);
-    const ln=document.createElement('div');ln.className='gl-line'+(i===0?' on':'');
-    ln.onclick=()=>{
-      const itemW=items[0].getBoundingClientRect().width+14;
-      wrap.scrollTo({left:i*itemW,behavior:'smooth'});
-    };
-    lines.appendChild(ln);
+
+  /* 혼합 그리드 빌더: 첫 장 전체폭 + 이후 2열 */
+  function buildGrid(srcs,startIdx){
+    srcs.forEach((src,j)=>{
+      const i=startIdx+j;
+      if(i===0){
+        /* 첫 사진: 가로 전체 */
+        const row=document.createElement('div');row.className='gl-row-full';
+        const img=document.createElement('img');img.src=src;img.alt='';img.loading='lazy';
+        row.appendChild(img);row.addEventListener('click',()=>lbOpen(i));
+        inner.appendChild(row);
+      } else {
+        /* 2열 배치: 홀수 인덱스마다 새 행 */
+        const odd=(i%2===1);
+        if(odd){
+          const row=document.createElement('div');row.className='gl-row-two';row.id='gl-row-'+i;
+          inner.appendChild(row);
+        }
+        const row=document.getElementById('gl-row-'+(odd?i:i-1))||inner.lastElementChild;
+        const cell=document.createElement('div');cell.className='gl-grid-item';
+        const img=document.createElement('img');img.src=src;img.alt='';img.loading='lazy';
+        cell.appendChild(img);cell.addEventListener('click',()=>lbOpen(i));
+        row.appendChild(cell);
+      }
+    });
+  }
+
+  buildGrid(C.photos.slice(0,PREVIEW),0);
+
+  /* 더보기 버튼 */
+  const moreBtn=$('gl-more-btn');
+  const moreWrap=$('gl-more-wrap');
+  const moreLabel=$('gl-more-label');
+  let expanded=false;
+  if(total>PREVIEW){
+    moreBtn.style.display='flex';
+    moreLabel.textContent=`갤러리 더보기 (${PREVIEW} / ${total})`;
+    moreBtn.addEventListener('click',()=>{
+      if(!expanded){
+        buildGrid(C.photos.slice(PREVIEW),PREVIEW);
+        moreWrap.classList.remove('collapsed');
+        moreLabel.textContent=`접기 (${total}장 전체)`;
+        moreBtn.classList.add('open');
+        expanded=true;
+      } else {
+        /* 추가된 항목 제거 */
+        const rows=inner.querySelectorAll('.gl-row-full,.gl-row-two,.gl-grid-item');
+        let cnt=0;
+        rows.forEach(el=>{
+          if(el.parentElement===inner&&cnt>=PREVIEW)el.remove();
+          else cnt++;
+        });
+        /* 간단하게: inner 리셋 후 재빌드 */
+        inner.innerHTML='';buildGrid(C.photos.slice(0,PREVIEW),0);
+        moreWrap.classList.add('collapsed');
+        moreLabel.textContent=`갤러리 더보기 (${PREVIEW} / ${total})`;
+        moreBtn.classList.remove('open');
+        expanded=false;
+        $('gallery').scrollIntoView({behavior:'smooth',block:'start'});
+      }
+    });
+  }
+
+  /* 라이트박스 */
+  let cur=0;
+  const lb=$('gl-lb'),lbImg=$('lb-img'),lbCnt=$('lb-counter');
+  function lbOpen(i){
+    cur=i;lbImg.src=C.photos[i];
+    lbCnt.textContent=`${pad(i+1)} / ${pad(total)}`;
+    lb.classList.add('on');document.body.style.overflow='hidden';
+  }
+  function lbClose(){lb.classList.remove('on');document.body.style.overflow='';}
+  function lbMove(d){cur=(cur+d+total)%total;lbImg.src=C.photos[cur];lbCnt.textContent=`${pad(cur+1)} / ${pad(total)}`;}
+  $('lb-close').onclick=lbClose;
+  $('lb-prev').onclick=()=>lbMove(-1);
+  $('lb-next').onclick=()=>lbMove(1);
+  lb.addEventListener('click',e=>{if(e.target===lb)lbClose();});
+  let tx=0;
+  lbImg.addEventListener('touchstart',e=>{tx=e.touches[0].clientX;},{passive:true});
+  lbImg.addEventListener('touchend',e=>{const dx=e.changedTouches[0].clientX-tx;if(Math.abs(dx)>50)lbMove(dx<0?1:-1);},{passive:true});
+  document.addEventListener('keydown',e=>{
+    if(!lb.classList.contains('on'))return;
+    if(e.key==='ArrowLeft')lbMove(-1);
+    else if(e.key==='ArrowRight')lbMove(1);
+    else if(e.key==='Escape')lbClose();
   });
-  const update=()=>{
-    const itemW=items[0]?items[0].getBoundingClientRect().width+14:1;
-    const idx=Math.min(Math.round(wrap.scrollLeft/itemW),total-1);
-    items.forEach((el,i)=>el.classList.toggle('active',i===idx));
-    document.querySelectorAll('.gl-line').forEach((l,i)=>l.classList.toggle('on',i===idx));
-    counter.textContent=`${pad(idx+1)} / ${pad(total)}`;
-  };
-  wrap.addEventListener('scroll',update,{passive:true});
-  update();
 })();
 
 /* ── 오시는 길 ── */
