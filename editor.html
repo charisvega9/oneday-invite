@@ -1035,10 +1035,17 @@ function updateStorage(){
   let total=0;
   for(const k in localStorage)if(k.startsWith('wc_'))total+=localStorage[k].length*2;
   const mb=(total/1048576).toFixed(2);
-  const pct=Math.min(total/(5*1048576)*100,100);
-  $('storage-used').textContent=`${mb} MB / ~5 MB`;
-  const f=$('storage-fill');f.style.width=pct+'%';
-  f.className='storage-fill'+(pct>80?' danger':pct>60?' warn':'');
+  if(_gsUrl){
+    /* Drive 연동 시: 이미지는 Drive에 저장되므로 로컬 용량 무관 */
+    $('storage-used').textContent=`☁️ Drive 연동 중 (로컬 ${mb} MB) — 사진 장수 제한 없음`;
+    const f=$('storage-fill');f.style.width='5%';
+    f.className='storage-fill';
+  } else {
+    const pct=Math.min(total/(5*1048576)*100,100);
+    $('storage-used').textContent=`${mb} MB / ~5 MB`;
+    const f=$('storage-fill');f.style.width=pct+'%';
+    f.className='storage-fill'+(pct>80?' danger':pct>60?' warn':'');
+  }
 }
 
 /* ── 저장 ── */
