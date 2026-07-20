@@ -900,13 +900,15 @@ function compress(file,maxW){
 
 /* ── Google Drive 업로드 ── */
 async function uploadToDrive(base64,fileName){
-  if(!_gsUrl)return null;
+  /* 이미지 업로드는 항상 최신 URL 사용 (wc_gs 캐시 무시) */
+  const uploadUrl=DEFAULT_GS_URL;
   try{
-    const res=await fetch(_gsUrl,{
+    const res=await fetch(uploadUrl,{
       method:'POST',
       body:JSON.stringify({action:'uploadImage',imageData:base64,fileName})
     });
-    const json=await res.json();
+    const text=await res.text();
+    const json=JSON.parse(text);
     if(json.ok&&json.url)return json.url;
     console.error('[Drive] 업로드 실패:',json);
     return null;
