@@ -128,6 +128,11 @@
     .cal-mark-circle{width:32px;height:32px;border-radius:50%;background:var(--br);color:#fff;font-weight:700;font-family:var(--kr);font-size:13px;display:flex;align-items:center;justify-content:center;margin:0 auto}
     .cal-mark-time{font-size:9px;color:var(--br);letter-spacing:.5px;font-weight:500;margin-top:4px;white-space:nowrap;font-family:var(--kr)}
     .cal-d.dim{color:#ccc}
+    .cal-dow span:first-child{color:#c0392b}
+    .cal-dow span:last-child{color:#2c6fad}
+    .cal-days .cal-d:nth-child(7n+1){color:#c0392b}
+    .cal-days .cal-d:nth-child(7n){color:#2c6fad}
+    .cal-days .cal-d.dim:nth-child(7n+1),.cal-days .cal-d.dim:nth-child(7n){color:#ddd}
 
     /* 카운트다운 */
     .cntd{display:flex;margin-top:28px;gap:0;align-items:flex-end;justify-content:center}
@@ -241,8 +246,8 @@
     .acc-disc-btn:first-of-type{border-top:1px solid color-mix(in srgb,var(--br) 35%,transparent)}
     .acc-disc-arrow{display:inline-block;transition:transform .3s;color:var(--br);font-size:11px}
     .acc-disc-btn.open .acc-disc-arrow{transform:rotate(180deg)}
-    .acc-disc-pnl{display:none;padding:12px 0 4px}
-    .acc-disc-pnl.on{display:block}
+    .acc-disc-pnl{max-height:0;overflow:hidden;opacity:0;transition:max-height .38s ease,opacity .3s ease;padding:0}
+    .acc-disc-pnl.on{max-height:600px;opacity:1;padding:12px 0 4px}
     .acc-item{display:flex;align-items:center;gap:12px;padding:14px 16px;background:linear-gradient(to right,#FFFFFF,#DEEDFF);border-radius:4px;margin-bottom:8px}
     .acc-info{flex:1;min-width:0}
     .acc-owner{font-size:13px;font-weight:500;color:#000;margin-bottom:3px}
@@ -284,6 +289,8 @@
 
     /* ── 애니메이션 ── */
     @keyframes fadeUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:none}}
+    @keyframes glRowIn{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
+    .gl-row-three,.gl-row-two{animation:glRowIn .35s ease both}
     @keyframes fadeIn{from{opacity:0}to{opacity:1}}
     @keyframes spin{to{transform:rotate(360deg)}}
     @keyframes scrollPulse{0%,100%{opacity:1;transform:scaleY(1)}50%{opacity:.35;transform:scaleY(.5)}}
@@ -698,6 +705,7 @@ tick();setInterval(tick,1000);
           cell.appendChild(img);cell.addEventListener('click',()=>lbOpen(idx));
           row.appendChild(cell);
         }
+        row.style.animationDelay=(inner.children.length*.06)+'s';
         inner.appendChild(row);i+=count;
       } else {
         /* 2열 4:3 행 */
@@ -710,6 +718,7 @@ tick();setInterval(tick,1000);
           cell.appendChild(img);cell.addEventListener('click',()=>lbOpen(idx));
           row.appendChild(cell);
         }
+        row.style.animationDelay=(inner.children.length*.06)+'s';
         inner.appendChild(row);i+=count;
       }
     }
